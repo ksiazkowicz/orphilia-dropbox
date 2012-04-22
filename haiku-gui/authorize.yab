@@ -1,0 +1,35 @@
+#!yab
+ 
+open "/boot/home/config/settings/Orphilia/authorize-url" for reading as #1
+input #1 url$
+
+window open 300,414 to 900,524, "authorize", "Authorize"
+
+
+TEXT 10,10, "label", "In order to complete configuration, you must give Orphilia access to your Dropbox account. Open link below in ", "authorize"
+TEXT 10,30, "label", "a web browser and press OK when you'll finish.", "authorize"
+
+textcontrol 10,50 to 590,60, "TC", "", url$, "authorize"
+button 420,80 to 500,100, "exit", "OK", "authorize"
+button 510,80 to 590,100, "copy", "Copy", "authorize"
+
+inloop = true
+while(inloop)
+	msg$ = message$
+	switch msg$
+		case "copy|":
+			CLIPBOARD COPY url$
+			alert "Authorize URL has been copied to clipboard", "OK", "info"
+			break
+
+		case "exit|"
+			inloop = false
+			window close "authorize"
+			break
+
+
+	end switch
+	
+	if(window count<1) inloop = false
+	
+wend

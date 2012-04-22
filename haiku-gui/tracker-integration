@@ -1,0 +1,29 @@
+#!/boot/home/config/bin/yab
+
+public_link$ = "tu będzie link publiczny"
+
+window open 300,414 to 900,484, "Publiclink", "Public link"
+textcontrol 10,10 to 590,20, "TC", "Link:", public_link$, "Publiclink"
+button 420,40 to 500,60, "exit", "Exit", "Publiclink"
+button 510,40 to 590,60, "copy", "Copy", "Publiclink"
+
+inloop = true
+while(inloop)
+	msg$ = message$
+	switch msg$
+		case "copy|":
+			CLIPBOARD COPY public_link$
+			alert "Public link has been copied to clipboard", "OK", "info"
+			break
+
+		case "exit|"
+			inloop = false
+			window close "Publiclink"
+			break
+
+
+	end switch
+	
+	if(window count<1) inloop = false
+	
+wend

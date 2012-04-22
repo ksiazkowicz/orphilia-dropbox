@@ -1,0 +1,86 @@
+#!yab
+
+window open 300,214 to 780,584, "MainWindow", "Welcome to Orphilia"
+button 390,330 to 470,360, "next_", "Next >", "MainWindow"
+button 300,330 to 380,360, "quit_", "Exit", "MainWindow"
+button 390,280 to 470,310, "install_", "Install", "MainWindow"
+button 300,280 to 380,310, "uninstall_", "Uninstall", "MainWindow"
+err = draw image 0,0, "img/step1.png", "MainWindow"
+
+if(err = 1) then
+	alert "Problem while loading step1.png!", "Quit", "stop"
+	window close "MainWindow"
+	exit 1
+endif
+
+mainwindow = true
+
+inloop = true
+while(inloop)
+	msg$ = message$
+	switch msg$
+		case "next_|":
+			window open 300,214 to 780,584, "MainWindow2", "Welcome to Orphilia"
+			window close "MainWindow"
+			button 390,330 to 470,360, "next2_", "Next >", "MainWindow2"
+			button 300,330 to 380,360, "quit2_", "Exit", "MainWindow2"
+			err = draw image 0,0, "img/step2.png", "MainWindow2"
+			textcontrol 210,200 to 470,210, "TC", "Dropbox folder:", "(optional)", "MainWindow2"
+
+			if(err = 1) then
+				alert "Problem while loading step2.png!", "Quit", "stop"
+				window close "MainWindow2"
+				exit 1
+			endif
+			break
+			
+		case "install_|":
+			system("orphilia --install")
+			break
+			
+		case "uninstall_|":
+			system("orphilia --uninstall")
+			break
+			
+		case "next2_|":
+			droppath$ = TEXTCONTROL GET$ "TC"
+			if droppath$ = "(optional)" then
+				droppath$ = "default"
+			endif
+			system("orphilia --configuration-haiku " + droppath$)
+			window open 300,214 to 780,584, "MainWindow3", "Welcome to Orphilia"
+			window close "MainWindow2"
+			button 390,330 to 470,360, "quit3_", "Finish", "MainWindow3"
+			err = draw image 0,0, "img/step3.png", "MainWindow3"
+
+			if(err = 1) then
+				alert "Problem while loading step3.png!", "Quit", "stop"
+				window close "MainWindow3"
+				exit 1
+			endif
+			break
+
+		case "quit_|"
+			inloop = false
+			window close "MainWindow"
+			break
+			
+		case "quit2_|"
+			inloop = false
+			window close "MainWindow2"
+			break
+			
+		case "quit3_|"
+			inloop = false
+			window close "MainWindow3"
+			break
+
+		case "MainWindow:_QuitRequested|"
+			window close "MainWindow"
+			break
+
+	end switch
+	
+	if(window count<1) inloop = false
+	
+wend

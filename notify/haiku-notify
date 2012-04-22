@@ -1,0 +1,33 @@
+#!python
+
+import os
+import sys
+
+type = sys.argv[1]
+message = sys.argv[2]
+
+def putin(string,filename,method):
+	if method == "append":
+		putinfile = open(filename,"a")
+	else:
+		putinfile = open(filename,"w")
+	putinfile.write(string)
+	putinfile.close
+
+def haiku_notify(string):
+	os.system('notify --type information --messageID 0 --group Orphilia --title \"Orphilia\" --icon /boot/apps/orphilia/orphilia_haiku.png \"' +string + '\"' )
+
+if type == "add":
+	haiku_notify("File " + sys.argv[2] + " has been added to your Dropbox.")
+
+elif type == "rm":
+	haiku_notify("File " + sys.argv[2] + " has been removed from your Dropbox.")
+
+elif type == "upd":
+	haiku_notify("File " + sys.argv[2] + " has been updated.")
+
+elif type == "link":
+	home = os.path.expanduser('~')
+	configurationdir = os.path.normpath(home + '/.orphilia/')
+	putin(message,configurationdir + '/Public link','rewrite')
+	os.system('/boot/system/apps/StyledEdit \"' +configurationdir + '/Public link\"')
