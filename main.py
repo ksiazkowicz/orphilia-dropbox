@@ -648,9 +648,12 @@ elif wtd == "--install":
          os.system("cp orphilia /boot/apps/orphilia")
          os.system("cp notify/haiku-notify /boot/apps/orphilia/haiku-notify")
          os.system("cp branding/orphilia_haiku.png /boot/apps/orphilia")
+         os.system("cp authorize.yab /boot/apps/orphilia/authorize")
+         os.system("cp yab /boot/apps/orphilia")
          os.system("cp trusted-certs.crt /boot/apps/orphilia")
          os.system("ln -s /boot/apps/orphilia/orphilia /boot/common/bin/orphilia")
          os.system("ln -s /boot/apps/orphilia/haiku-notify /boot/common/bin/orphilia_haiku-notify")
+         os.system("ln -s /boot/apps/orphilia/authorize /boot/common/bin/orphilia_haiku-authorize")
          os.system('alert --info \"Installation completed.\"')
        else:
           print "Copying files..."
@@ -671,6 +674,7 @@ elif wtd == "--uninstall":
           os.system("rm -r /boot/apps/orphilia")
           os.system("rm /boot/common/bin/orphilia")
           os.system("rm /boot/common/bin/orphilia_haiku-notify")
+          os.system("rm /boot/common/bin/orphilia_haiku-authorize")
           os.system('alert --info \"Uninstallation completed.\"')
        else:
           print "Removing files..."
