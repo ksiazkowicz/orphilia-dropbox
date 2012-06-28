@@ -7,6 +7,8 @@ use all of this information to craft properly constructed requests to Dropbox.
 A DropboxSession object must be passed to a dropbox.client.DropboxClient object upon
 initialization.
 """
+import urllib
+import oauth.oauth as oauth
 
 class DropboxSession(object):
     API_VERSION = 1

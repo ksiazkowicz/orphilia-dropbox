@@ -1,9 +1,10 @@
 rm orphilia
-cat build/parser.py >> orphilia.py
-cat header.py >> orphilia.py
-cat api/client.py >> orphilia.py
-cat api/rest.py >> orphilia.py
-cat api/session.py >> orphilia.py
+cat build/parser.py >> compiled/orphilia.py
+cat orphilia.py >> compiled/orphilia.py
+cp db_client.py compiled
+cp db_rest.py compiled
+cp db_session.py compiled
+
 cat main.py >> orphilia.py
 tr -d '\r' <orphilia.py> orphilia
 rm orphilia.py

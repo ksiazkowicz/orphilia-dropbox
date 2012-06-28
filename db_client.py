@@ -4,6 +4,9 @@ configure a dropbox.session.DropboxSession for this to work, but otherwise
 it's fairly self-explanatory.
 """
 
+import re
+import simplejson as json
+
 def format_path(path):
     """Normalize path for use with the Dropbox API.
 

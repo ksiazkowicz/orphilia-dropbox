@@ -2,6 +2,15 @@
 A simple JSON REST request abstraction layer that is used by the
 dropbox.client and dropbox.session modules. You shouldn't need to use this.
 """
+import httplib
+import os
+import pkg_resources
+import re
+import simplejson as json
+import socket
+import ssl
+import urllib
+import urlparse
 
 SDK_VERSION = "1.4"
 

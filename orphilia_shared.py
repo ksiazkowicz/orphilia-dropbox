@@ -1,46 +1,32 @@
+import sys
+import os
+import random
+import getpass
+import time
+import shutil
+import logging
 
+import cmd
+import locale
+import pprint
+import shlex
 
-###### OPERACJE NA SCIEZKACH
-#############################
-#############################
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
-def parts(path): 
-    components = []  
-    while True: 
-        (path,tail) = os.path.split(path) 
-        if tail == "": 
-            components.reverse() 
-            return components 
-        components.append(tail) 
+# wartosci moralne, a raczej parametry wszelakie
+APP_KEY = 'ij4b7rjc7tsnlj4'
+APP_SECRET = '00evf045y00ml2e'
+ACCESS_TYPE = 'dropbox'
+SDK_VERSION = "1.4"
 
-def url_fix(s, charset='utf-8'): 
-    if isinstance(s, unicode): 
-        s = s.encode(charset, 'ignore') 
-    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s) 
-    path = urllib.quote(path, '/%') 
-    qs = urllib.quote_plus(qs, ':&=') 
-    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor)) 
+home = os.path.expanduser('~')
 
-def rewritepath(os,path): 
-
-    components = parts(path) 
-    newpath = ""
-
-    if os == 'nt':
-       for item in components:
-           newpath = newpath + "\\" + item
-
-    elif os == 'posix':
-         for item in components:
-             newpath = newpath + "/" + item
-
-    elif os == 'url':
-         for item in components:
-             newpath = newpath + "/" + item
-         newpath = url_fix(newpath)
-
-    newpath = newpath[1:]
-    return newpath
+if sys.platform[:5] == "haiku":
+	configurationdir = os.path.normpath(home + '/config/settings/Orphilia/')
+else:
+	configurationdir = os.path.normpath(home + '/.orphilia/')
+STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
 
 def putin(string,filename,method):
 	if method == "append":
@@ -173,144 +159,11 @@ def save_state(state):
     json.dump(state, f, indent=4)
     f.close()
 
-
-###### MANIPULACJE NA DATACH
-############################
-############################			
-
-def month_int(month):	
-	if month == "Jan":
-	   month = "01"
-	elif month == "Feb":
-	   month = "02"
-	elif month == "Mar":
-	   month = "03"
-	elif month == "Apr":
-	   month = "04"
-	elif month == "May":
-	   month = "05"
-	elif month == "Jun":
-	   month = "06"
-	elif month == "Jul":
-	   month = "07"
-	elif month == "Aug":
-	   month = "08"
-	elif month == "Sep":
-	   month = "09"
-	elif month == "Oct":
-	   month = "10"
-	elif month == "Nov":
-	   month = "11"
-	elif month == "Dec":
-	   month = "12"
-	return month
-	
-def translate_date(date1):
-	day = date1[:2]
-	date1 = date1[3:]
-	month = month_int(date1[:3])
-	date1 = date1[4:]
-	year = date1[:4]
-	date1 = date1[5:]
-	hour = date1[:2]
-	date1 = date1[3:]
-	minute = date1[:2]
-	date1 = date1[3:]
-	second = date1[:2]
-
-	hour = str(int(hour) +1)
-	return year + month + day + hour + minute + "." + second
-
-def generate_timestampd(date):
-	day = date[:2]
-	date = date[3:]
-	month = month_int(date[:3])
-	date = date[4:]
-	year = date[:4]
-	date = date[5:]
-	hour = date[:2]
-	date = date[3:]
-	minute = date[:2]
-	date = date[3:]
-	second = date[:2]
-
-	hour = str(int(hour) +1)
-
-	return (((((int(year) * 12) + int(month)) * 30 + int(day)) * 24 + int(hour)) * 60 + int(minute)) * 60
-
-def generate_modifytime(date):
-	day = date[:2]
-	date = date[3:]
-	month = date[:3]
-	date = date[4:]
-	year = date[:4]
-	date = date[5:]
-	hour = date[:2]
-	date = date[3:]
-	minute = date[:2]
-	date = date[3:]
-	second = date[:2]
-
-	modifytime = day + " " + month + " " + year + " " + hour + ":" + minute
-	return modifytime
-	
-def generate_timestamp(date):
-	print date
-	month = month_int(date[:3])
-	print month
-	date = date[4:]
-	print date
-	day = date[:2]
-	print day
-	date = date[3:]
-	print date
-	hour = date[:2]
-	print hour
-	date = date[3:]
-	print date
-	minute = date[:2]
-	print minute
-	date = date[3:]
-	print date
-	second = date[:2]
-	print second
-	date = date[3:]
-	print date
-	year = date
-	print year
-
-	return (((((int(year) * 12) + int(month)) * 30 + int(day)) * 24 + int(hour)) * 60 + int(minute)) * 60
-
-
 #####################################################
 ###################################################
 ######################## TU ZACZYNA SIE KLIENT!
 
-if wtd == "--client":
-    reload(sys).setdefaultencoding('utf8')
-    print "Orphilia"
-    print "[Maciej Janiszewski, 2010-2012]"
-    print "based on Dropbox SDK from https://www.dropbox.com/developers/reference/sdk"
-    print ""
-    wtd = "--client--silent"
-
-def login_and_authorize(authorize_url):   
-    br = mechanize.Browser()
-    br.open('https://www.dropbox.com/login')
-    isLoginForm = lambda l: l.action == "https://www.dropbox.com/login" and l.method == "POST"
-    try:
-      br.select_form(predicate=isLoginForm)
-    except:
-      print(" [!] Unable to find login form.");
-      exit(1);
-    br['login_email'] = email
-    br['login_password'] = password
-    response = br.submit()
-    br.open(authorize_url)
-    print " OK"
-    return
-
-if wtd == "--client--silent":
+def client():
 	statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
 	status = statusf.read()
 	statusf.close()
@@ -607,7 +460,7 @@ if wtd == "--client--silent":
 	        if sys.platform[:5] == "haiku":
 	              putin(url,os.path.normpath(configurationdir+'/authorize-url'),'rewrite')
 	              drmchujnia = os.system("orphilia_haiku-authorize")
-	              ###os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
+	              os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
 	        else:
 	              print "url:", url,
 	              raw_input()
@@ -633,12 +486,20 @@ if wtd == "--client--silent":
 	
 	if __name__ == '__main__':
 	    main()
+		
+def kanapki():
+    reload(sys).setdefaultencoding('utf8')
+    print "Orphilia"
+    print "[Maciej Janiszewski, 2010-2012]"
+    print "based on Dropbox SDK from https://www.dropbox.com/developers/reference/sdk"
+    print ""
+    client()
 
 
 ########################### ALTERNATYWNE KOMENDY
 ################################################
 
-elif wtd == "--install":
+def install():
        print "Orphilia Installer"
        print "---"
        if sys.platform[:5] == "haiku":
@@ -666,11 +527,11 @@ elif wtd == "--install":
 
        print "Done. Now run orphilia --configuration as regular user"
 
-elif wtd == "--uninstall":
+def uninstall():
        print "Orphilia Installer"
        print "---"
        if sys.platform[:5] == "haiku":
-          print "Removing files..."
+          print "Removing files..."           
           os.system("rm -r /boot/apps/orphilia")
           os.system("rm /boot/common/bin/orphilia")
           os.system("rm /boot/common/bin/orphilia_haiku-notify")
@@ -688,7 +549,7 @@ elif wtd == "--uninstall":
 ################################################
 ################################################
 
-elif wtd == "--help":
+def help():
 	print("\n")
 	print("Syntax: orphilia [OPTION] [PARAMETERS]")
 	print("")
@@ -709,7 +570,7 @@ elif wtd == "--help":
 	print("       mkdir  - creates a directory (name specified in parameter2)")
 	print("       uid    - updates Orphilia configuration with current accounts Dropbox UID")
 
-elif wtd == "--configuration":
+def config():
 	if os.path.isdir(configurationdir):
 		shutil.rmtree(configurationdir)
 	os.makedirs(configurationdir)
@@ -739,7 +600,7 @@ elif wtd == "--configuration":
 
 	print("Configuration files has been created.")
 
-elif wtd == "--configuration-haiku":
+def config_gui():
 	if os.path.isdir(configurationdir):
 		shutil.rmtree(configurationdir)
 	os.makedirs(configurationdir)
@@ -760,7 +621,7 @@ elif wtd == "--configuration-haiku":
 
 	os.system('orphilia --client--silent \"uid \''+os.path.normpath(configurationdir+'/dropbox-id') + '\'\"')
 
-elif wtd == "--public":
+def public():
 	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
 	DROPPATH = read_details.read()
 	read_details.close()
@@ -771,7 +632,30 @@ elif wtd == "--public":
 	link = 'http://dl.dropbox.com/u/' + DROPID + '/' + rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
 	orphilia_notify('link',link)
 
-elif wtd == "--monitor":
+def monitor():
+    read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
+    droppath = read_details.read()
+    read_details.close()
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    event_handler = LoggingEventHandler()
+    observer = Observer()
+    observer.schedule(event_handler, droppath, recursive=True)
+    observer.start()
+    try:
+      while True:
+        time.sleep(1)
+        statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
+        status = statusf.read()
+        statusf.close()
+        if status == "1":
+           exit()
+    except KeyboardInterrupt:
+      observer.stop()
+      observer.join()
+
     class LoggingEventHandler(FileSystemEventHandler):
         """Logs all the events captured."""
 
@@ -838,30 +722,3 @@ elif wtd == "--monitor":
                   os.system('orphilia --client--silent \"rm \'' + path + '\'\"')
                os.system('orphilia --client--silent \"upd \'' + droppath +"/"+ path + '\' \'' + path + '\'\"')
             logging.info("Modified %s: %s", what, event.src_path)
-
-    if __name__ == "__main__":
-      read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-      droppath = read_details.read()
-      read_details.close()
-
-      logging.basicConfig(level=logging.INFO,
-                          format='%(message)s',
-                          datefmt='%Y-%m-%d %H:%M:%S')
-      event_handler = LoggingEventHandler()
-      observer = Observer()
-      observer.schedule(event_handler, droppath, recursive=True)
-      observer.start()
-      try:
-        while True:
-          time.sleep(1)
-          statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
-          status = statusf.read()
-          statusf.close()
-          if status == "1":
-             exit()
-      except KeyboardInterrupt:
-        observer.stop()
-        observer.join()
-
-else:
-     print("Invalid syntax. Type orphilia --help for more informations")
