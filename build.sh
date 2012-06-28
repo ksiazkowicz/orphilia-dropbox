@@ -1,12 +1,14 @@
 rm orphilia
-cat build/parser.py >> compiled/orphilia.py
-cat orphilia.py >> compiled/orphilia.py
-cp db_client.py compiled
-cp db_rest.py compiled
-cp db_session.py compiled
+cat build/parser.py >> built/orphilia.py
+cat orphilia.py >> built/orphilia.py
+cp db_client.py built
+cp db_rest.py built
+cp db_session.py built
+cp date_rewrite.py built
+cp path_rewrite.py built
+cp orphilia_shared.py built
 
-cat main.py >> orphilia.py
-tr -d '\r' <orphilia.py> orphilia
-rm orphilia.py
-chmod +x orphilia
+tr -d '\r' <built/orphilia.py> built/orphilia
+rm built/orphilia.py
+chmod +x built/orphilia
 echo Build scripts parsed.
