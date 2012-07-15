@@ -1,0 +1,3 @@
+include CHANGELOG
+recursive-include example *.py
+include dropbox/trusted-certs.crt
