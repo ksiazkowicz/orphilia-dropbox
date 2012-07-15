@@ -1,11 +1,7 @@
 import sys
 import os
-import shutil
 import logging
-
-import locale
-import pprint
-import shlex
+import time
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -18,29 +14,6 @@ else:
 	configurationdir = os.path.normpath(home + '/.orphilia/')
 
 def monitor():
-    read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-    droppath = read_details.read()
-    read_details.close()
-
-    logging.basicConfig(level=logging.INFO,
-                        format='%(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    event_handler = LoggingEventHandler()
-    observer = Observer()
-    observer.schedule(event_handler, droppath, recursive=True)
-    observer.start()
-    try:
-      while True:
-        time.sleep(1)
-        statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
-        status = statusf.read()
-        statusf.close()
-        if status == "1":
-           exit()
-    except KeyboardInterrupt:
-      observer.stop()
-      observer.join()
-
     class LoggingEventHandler(FileSystemEventHandler):
         """Logs all the events captured."""
 
@@ -107,3 +80,26 @@ def monitor():
                   os.system('orphilia --client--silent \"rm \'' + path + '\'\"')
                os.system('orphilia --client--silent \"upd \'' + droppath +"/"+ path + '\' \'' + path + '\'\"')
             logging.info("Modified %s: %s", what, event.src_path)
+
+    read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
+    droppath = read_details.read()
+    read_details.close()
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    event_handler = LoggingEventHandler()
+    observer = Observer()
+    observer.schedule(event_handler, droppath, recursive=True)
+    observer.start()
+    try:
+      while True:
+        time.sleep(1)
+        statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
+        status = statusf.read()
+        statusf.close()
+        if status == "1":
+           exit()
+    except KeyboardInterrupt:
+      observer.stop()
+      observer.join()

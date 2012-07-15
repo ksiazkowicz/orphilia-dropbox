@@ -1,15 +1,14 @@
 import sys
 import os
 import random
-import getpass
-import time
-import shutil
-import logging
 
 import cmd
 import locale
 import pprint
 import shlex
+
+from dropbox import client, rest, session
+import shared
 
 # wartosci moralne, a raczej parametry wszelakie
 APP_KEY = 'ij4b7rjc7tsnlj4'
@@ -428,7 +427,7 @@ def client():
 	            return parts[0], parts[1:], line
 
 
-	class StoredSession(DropboxSession):
+	class StoredSession(session.DropboxSession):
 	    TOKEN_FILE = os.path.normpath(configurationdir + "/token_store.txt")
 
 	    def load_creds(self):
@@ -472,7 +471,7 @@ def client():
 
 	    def unlink(self):
 	        self.delete_creds()
-	        DropboxSession.unlink(self)
+	        session.DropboxSession.unlink(self)
 
 
 	def main():
@@ -492,132 +491,6 @@ def kanapki():
     print ""
     client()
 
-
-########################### ALTERNATYWNE KOMENDY
-################################################
-
-def install():
-       print "Orphilia Installer"
-       print "---"
-       if sys.platform[:5] == "haiku":
-         print "Copying files..."
-         os.system("chmod +x ./orphilia")
-         os.system("mkdir /boot/apps/orphilia")
-         os.system("cp orphilia /boot/apps/orphilia")
-         os.system("cp notify/haiku-notify /boot/apps/orphilia/haiku-notify")
-         os.system("cp branding/orphilia_haiku.png /boot/apps/orphilia")
-         os.system("cp authorize.yab /boot/apps/orphilia/authorize")
-         os.system("cp yab /boot/apps/orphilia")
-         os.system("cp trusted-certs.crt /boot/apps/orphilia")
-         os.system("ln -s /boot/apps/orphilia/orphilia /boot/common/bin/orphilia")
-         os.system("ln -s /boot/apps/orphilia/haiku-notify /boot/common/bin/orphilia_haiku-notify")
-         os.system("ln -s /boot/apps/orphilia/authorize /boot/common/bin/orphilia_haiku-authorize")
-         os.system('alert --info \"Installation completed.\"')
-       else:
-          print "Copying files..."
-          os.system("chmod +x ./orphilia")
-          os.system("cp orphilia /usr/bin")
-          os.system("cp notify/cli-notify /usr/bin/orphilia_cli-notify")
-          os.system("cp notify/notifysend-notify /usr/bin/orphilia_notifysend-notify")
-          os.system("cp trusted-certs.crt /usr/bin")
-          os.system("cp ./branding/orphilia.png /usr/share/pixmaps")
-
-       print "Done. Now run orphilia --configuration as regular user"
-
-def uninstall():
-       print "Orphilia Installer"
-       print "---"
-       if sys.platform[:5] == "haiku":
-          print "Removing files..."           
-          os.system("rm -r /boot/apps/orphilia")
-          os.system("rm /boot/common/bin/orphilia")
-          os.system("rm /boot/common/bin/orphilia_haiku-notify")
-          os.system("rm /boot/common/bin/orphilia_haiku-authorize")
-          os.system('alert --info \"Uninstallation completed.\"')
-       else:
-          print "Removing files..."
-          os.system("rm /usr/bin/orphilia")
-          os.system("rm /usr/bin/orphilia_cli-notify")
-          os.system("rm /usr/bin/orphilia_notifysend-notify")
-          os.system("rm /usr/bin/trusted-certs.crt")
-          os.system("rm /usr/share/pixmaps/orphilia.png")
-       print "Done."
-
-################################################
-################################################
-
-def help():
-	print("\n")
-	print("Syntax: orphilia [OPTION] [PARAMETERS]")
-	print("")
-	print("  --help          - displays this text")
-	print("  --monitor       - monitors Dropbox folder activity")
-	print("  --configuration - runs configuration wizard")
-	print("  --public        - generates public links")
-	print("  --install       - installs Orphilia")
-	print("  --uninstall     - uninstalls Orphilia")
-	print("  --client        - runs Orphilia API Client")
-	print('     syntax: orphilia --client "\\"[parameter1]\\" \\"[parameter2]\\" \\"[parameter3]\\""')
-	print("       get    - downloads file from path specified in parameter2 and saves them to \npath specified in parameter3")
-	print("       put    - uploads file from path specified in parameter2 to path specified in \nparameter3")
-	print("       mv     - moves file from path specified in parameter2 to path specified in \nparameter3")
-	print("       cp     - copies file from path specified in parameter2 to path specified in \nparameter3")
-	print("       rm     - removes a file (name specified in parameter2)")
-	print("       ls     - creates a list of files in directory specified in parameter2 and \nsaves it to file specified in parameter3")
-	print("       mkdir  - creates a directory (name specified in parameter2)")
-	print("       uid    - updates Orphilia configuration with current accounts Dropbox UID")
-
-def config():
-	if os.path.isdir(configurationdir):
-		shutil.rmtree(configurationdir)
-	os.makedirs(configurationdir)
-	putin('0',os.path.normpath(configurationdir+'/net-status'),'rewrite')
-	print("Welcome to Orphilia, an open-source crossplatform Dropbox client.\nIn few steps, you will configure your Dropbox account to be used with Orphilia.")
-	
-	if sys.platform[:5] == "haiku":
-		putin('orphilia_haiku-notify',os.path.normpath(configurationdir+'/notify-settings'),'rewrite')
-
-	else:
-		notifier = raw_input("Enter notify method: ")
-		putin(notifier,os.path.normpath(configurationdir+'/notify-settings'),'rewrite')
-
-	droppath = raw_input("Dropbox folder location (optional):")
-	
-	if droppath == "":	
-		droppath = os.path.normpath(home + '/Dropbox')
-	else:
-		pass
-		
-	putin(droppath,os.path.normpath(configurationdir+'/dropbox-path'),'rewrite')
-	if not os.path.exists(droppath):
- 		os.makedirs(droppath)
-
-	print("Please wait. Orphilia is making configuration files.")
-	os.system('orphilia --client--silent \"uid \''+os.path.normpath(configurationdir+'/dropbox-id') + '\'\"')
-
-	print("Configuration files has been created.")
-
-def config_gui():
-	if os.path.isdir(configurationdir):
-		shutil.rmtree(configurationdir)
-	os.makedirs(configurationdir)
-	putin('0',os.path.normpath(configurationdir+'/net-status'),'rewrite')
-	
-	putin('orphilia_haiku-notify',os.path.normpath(configurationdir+'/notify-settings'),'rewrite')
-
-	droppath = sys.argv[2]
-	
-	if droppath == "default":	
-		droppath = os.path.normpath(home + '/Dropbox')
-	else:
-		pass
-		
-	putin(droppath,os.path.normpath(configurationdir+'/dropbox-path'),'rewrite')
-	if not os.path.exists(droppath):
- 		os.makedirs(droppath)
-
-	os.system('orphilia --client--silent \"uid \''+os.path.normpath(configurationdir+'/dropbox-id') + '\'\"')
-
 def public():
 	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
 	DROPPATH = read_details.read()
@@ -626,5 +499,5 @@ def public():
 	DROPID = read_details2.read()
 	read_details2.close()
 	par = sys.argv[2]
-	link = 'http://dl.dropbox.com/u/' + DROPID + '/' + rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
+	link = 'http://dl.dropbox.com/u/' + DROPID + '/' + shared.path_rewrite.rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
 	orphilia_notify('link',link)
