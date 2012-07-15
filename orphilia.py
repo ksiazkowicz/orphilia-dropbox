@@ -9,6 +9,7 @@ import db_client
 import path_rewrite
 import date_rewrite
 import orphilia_shared
+import orphilia_monitor
 
 if len(sys.argv) > 1:
     wtd = sys.argv[1]
@@ -37,7 +38,7 @@ elif wtd == "--configuration-haiku":
     orphilia_shared.config_gui()
 
 elif wtd == "--monitor":
-    orphilia_shared.monitor()
+    orphilia_monitor.monitor()
 
 elif wtd == "--public":
     orphilia_shared.public()
