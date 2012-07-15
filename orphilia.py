@@ -1,15 +1,7 @@
 import sys
 
-####### Dropbox SDK
-import db_rest
-import db_session
-import db_client
-
 ####### Orphilia-specific modules
-import path_rewrite
-import date_rewrite
-import orphilia_shared
-import orphilia_monitor
+import orphilia
 
 if len(sys.argv) > 1:
     wtd = sys.argv[1]
@@ -17,31 +9,49 @@ else:
     wtd = "brick"
 
 if wtd == "--client":
-    orphilia_shared.kanapki()
+    orphilia.client.kanapki()
 
 elif wtd == "--client--silent":
-    orphilia_shared.client()
+    orphilia.client.client()
 
 elif wtd == "--install":
-    orphilia_shared.install()
+    orphilia.installer.install()
 
 elif wtd == "--uninstall":
-    orphilia_shared.uninstall()
+    orphilia.installer.uninstall()
 
 elif wtd == "--help":
-    orphilia_shared.help()
+	print("\n")
+	print("Syntax: orphilia [OPTION] [PARAMETERS]")
+	print("")
+	print("  --help          - displays this text")
+	print("  --monitor       - monitors Dropbox folder activity")
+	print("  --configuration - runs configuration wizard")
+	print("  --public        - generates public links")
+	print("  --install       - installs Orphilia")
+	print("  --uninstall     - uninstalls Orphilia")
+	print("  --client        - runs Orphilia API Client")
+	print('     syntax: orphilia --client "\\"[parameter1]\\" \\"[parameter2]\\" \\"[parameter3]\\""')
+	print("       get    - downloads file from path specified in parameter2 and saves them to \npath specified in parameter3")
+	print("       put    - uploads file from path specified in parameter2 to path specified in \nparameter3")
+	print("       mv     - moves file from path specified in parameter2 to path specified in \nparameter3")
+	print("       cp     - copies file from path specified in parameter2 to path specified in \nparameter3")
+	print("       rm     - removes a file (name specified in parameter2)")
+	print("       ls     - creates a list of files in directory specified in parameter2 and \nsaves it to file specified in parameter3")
+	print("       mkdir  - creates a directory (name specified in parameter2)")
+	print("       uid    - updates Orphilia configuration with current accounts Dropbox UID")
 
 elif wtd == "--configuration":
-    orphilia_shared.config()
+    orphilia.config.config()
 
 elif wtd == "--configuration-haiku":
-    orphilia_shared.config_gui()
+    orphilia.config.config_gui()
 
 elif wtd == "--monitor":
-    orphilia_monitor.monitor()
+    orphilia.monitor.monitor()
 
 elif wtd == "--public":
-    orphilia_shared.public()
+    orphilia.client.public()
 
 else:
      print("Invalid syntax. Type orphilia --help for more informations")

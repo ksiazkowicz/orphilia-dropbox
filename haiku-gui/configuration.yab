@@ -59,11 +59,11 @@ while(inloop)
 			break
 			
 		case "install_|":
-			system("orphilia --install")
+			system("orphilia.py --install")
 			break
 			
 		case "uninstall_|":
-			system("orphilia --uninstall")
+			system("orphilia.py --uninstall")
 			break
 			
 		case "next2_|":
