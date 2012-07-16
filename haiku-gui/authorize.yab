@@ -1,5 +1,5 @@
 #!yab
- 
+
 open "/boot/home/config/settings/Orphilia/authorize-url" for reading as #1
 input #1 url$
 
@@ -29,7 +29,7 @@ while(inloop)
 
 
 	end switch
-	
+
 	if(window count<1) inloop = false
-	
+
 wend

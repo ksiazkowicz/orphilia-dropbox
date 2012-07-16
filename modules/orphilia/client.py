@@ -6,6 +6,7 @@ import cmd
 import locale
 import pprint
 import shlex
+import json
 
 from dropbox import client, rest, session
 from shared import date_rewrite, path_rewrite
@@ -77,7 +78,7 @@ def apply_delta(root, e):
     branch, leaf = split_path(path)
 
     if metadata is not None:
-        sys.stdout.write('+ %s\n' % path)
+        print '+ %s\n' % path
         # Traverse down the tree until we find the parent folder of the entry
         # we want to add.  Create any missing folders along the way.
         children = root
@@ -98,7 +99,7 @@ def apply_delta(root, e):
         else:
             node.content = metadata['size'], metadata['modified']
     else:
-        sys.stdout.write('- %s\n' % path)
+        print '- %s\n' % path
         # Traverse down the tree until we find the parent of the entry we
         # want to delete.
         children = root
@@ -180,7 +181,7 @@ def orphilia_client():
 	                return f(self, *args)
 	            except TypeError, e:
 	                self.stdout.write(str(e) + '\n')
-	            except ErrorResponse, e:
+	            except rest.ErrorResponse, e:
 	               msg = e.user_error_msg or str(e)
 	               self.stdout.write('Error: %s\n' % msg)
 	               msg2 = msg[:5]
