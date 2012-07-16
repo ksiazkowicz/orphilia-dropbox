@@ -12,7 +12,7 @@ if wtd == "--client":
     orphilia.client.kanapki()
 
 elif wtd == "--client--silent":
-    orphilia.client.client()
+    orphilia.client.orphilia_client()
 
 elif wtd == "--install":
     orphilia.installer.install()

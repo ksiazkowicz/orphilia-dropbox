@@ -84,7 +84,7 @@ def copyfiles():
 
 		#copy cert, readme etc.
 		shutil.copy(build_path + '/README',build_path + '/built')
-		shutil.copy(build_path + '/trusted-certs.crt',build_path + '/built')
+		shutil.copy(build_path + '/modules/dropbox/trusted-certs.crt',build_path + '/built/dropbox')
 	except:
 		print ' [FAILED]'
 		print "Unable to copy files. Check if you have read/write permissions to this catalog."

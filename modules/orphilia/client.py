@@ -8,7 +8,7 @@ import pprint
 import shlex
 
 from dropbox import client, rest, session
-import shared
+from shared import date_rewrite, path_rewrite
 
 # wartosci moralne, a raczej parametry wszelakie
 APP_KEY = 'ij4b7rjc7tsnlj4'
@@ -159,7 +159,7 @@ def save_state(state):
 ###################################################
 ######################## TU ZACZYNA SIE KLIENT!
 
-def client():
+def orphilia_client():
 	statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
 	status = statusf.read()
 	statusf.close()
@@ -201,7 +201,7 @@ def client():
 	    def __init__(self, app_key, app_secret):
 	        cmd.Cmd.__init__(self)
 	        self.sess = StoredSession(app_key, app_secret, access_type=ACCESS_TYPE)
-	        self.api_client = DropboxClient(self.sess)
+	        self.api_client = client.DropboxClient(self.sess)
 	
 	        self.sess.load_creds()
 
@@ -286,7 +286,7 @@ def client():
 	        resp = self.api_client.metadata(path)
 	        modified = resp['modified']
 	        date1 = modified[5:]
-	        date1 = generate_modifytime(date1)
+	        date1 = date_rewrite.generate_modifytime(date1)
 	        f = self.api_client.get_file("/" + path)
 	        file = open(to_path,"w")
 		file.write(f.read())
@@ -328,9 +328,9 @@ def client():
 
 				        hour = str(int(hour) +1)
 
-				        timestamp1_rnd = generate_timestampd(date1)
+				        timestamp1_rnd = date_rewrite.generate_timestampd(date1)
 				        print(date1 + " converted to " + timestamp1_rnd)
-				        timestamp2_rnd = generate_timestamp(date2)
+				        timestamp2_rnd = date_rewrite.generate_timestamp(date2)
 				        print(date2 + " converted to " + timestamp2_rnd)
 				        
 			                dir = f['is_dir']
@@ -473,15 +473,10 @@ def client():
 	        self.delete_creds()
 	        session.DropboxSession.unlink(self)
 
-
-	def main():
-	    if APP_KEY == '' or APP_SECRET == '':
-	        exit("You need to set your APP_KEY and APP_SECRET!")
-	    term = DropboxTerm(APP_KEY, APP_SECRET)
-	    term.onecmd(sys.argv[2])
-	
-	if __name__ == '__main__':
-	    main()
+	if APP_KEY == '' or APP_SECRET == '':
+	   exit("You need to set your APP_KEY and APP_SECRET!")
+	term = DropboxTerm(APP_KEY, APP_SECRET)
+	term.onecmd(sys.argv[2])
 		
 def kanapki():
     reload(sys).setdefaultencoding('utf8')
@@ -489,7 +484,7 @@ def kanapki():
     print "[Maciej Janiszewski, 2010-2012]"
     print "based on Dropbox SDK from https://www.dropbox.com/developers/reference/sdk"
     print ""
-    client()
+    orphilia_client()
 
 def public():
 	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
@@ -499,5 +494,5 @@ def public():
 	DROPID = read_details2.read()
 	read_details2.close()
 	par = sys.argv[2]
-	link = 'http://dl.dropbox.com/u/' + DROPID + '/' + shared.path_rewrite.rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
+	link = 'http://dl.dropbox.com/u/' + DROPID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
 	orphilia_notify('link',link)

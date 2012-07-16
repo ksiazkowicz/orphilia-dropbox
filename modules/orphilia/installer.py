@@ -62,13 +62,14 @@ def install():
 		else:
 			shutil.copy('./branding/orphilia.png','/usr/share/pixmaps')
 
-		shutil.copy('./trusted-certs.crt',installdir)
+		shutil.copy('./dropbox/trusted-certs.crt',installdir + '/dropbox')
 
 		#copy platform-specific files (gui)	
 		if sys.platform[:5] == "haiku":
 			shutil.copy('./authorize.yab',installdir + '/authorize.yab')
 			shutil.copy('./yab', installdir)
 			os.system('chmod +x ' + installdir + '/yab')
+			os.system('chmod +x ' + installdir + '/authorize.yab')
 	
 		#make symlinks
 		os.system('ln -s ' + installdir + '/orphilia.py ' + bindir + '/orphilia')
