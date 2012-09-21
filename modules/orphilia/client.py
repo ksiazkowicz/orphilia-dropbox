@@ -475,17 +475,17 @@ def orphilia_client():
 	        session.DropboxSession.unlink(self)
 
 	if APP_KEY == '' or APP_SECRET == '':
-	   exit("You need to set your APP_KEY and APP_SECRET!")
+	   exit('You need to set your APP_KEY and APP_SECRET!')
 	term = DropboxTerm(APP_KEY, APP_SECRET)
 	term.onecmd(sys.argv[2])
 		
-def kanapki():
+def client-verbose(cmd):
     reload(sys).setdefaultencoding('utf8')
-    print "Orphilia"
-    print "[Maciej Janiszewski, 2010-2012]"
-    print "based on Dropbox SDK from https://www.dropbox.com/developers/reference/sdk"
-    print ""
-    orphilia_client()
+    print('Orphilia')
+    print('Maciej Janiszewski, 2010-2012]')
+    print('based on Dropbox SDK from https://www.dropbox.com/developers/reference/sdk')
+    print('')
+    orphilia_client(cmd)
 
 def public():
 	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')

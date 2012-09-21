@@ -3,19 +3,26 @@ import os
 import shutil
 
 def install():
-	print "Orphilia Installer"
-	print "---"
+	print('Orphilia Installer')
+	print('---')
+	# check if command is supported on this platform
+	if sys.platform[:3] == 'win':
+		print('This function is not available on this platform')
+		sys.exit(1)
 
-	installdir = "/usr/share/orphilia"
-	bindir = "/usr/share/bin"
-	
-	if sys.platform[:5] == "haiku":
-		installdir = "/boot/apps/orphilia"
-		bindir = "/boot/common/bin"
+	# define generic installdir and bindir
+	installdir = '/usr/share/orphilia'
+	bindir = '/usr/share/bin'
+
+	# use Haiku-specific installdir and bindir	
+	if sys.platform[:5] == 'haiku':
+		installdir = '/boot/apps/orphilia'
+		bindir = '/boot/common/bin'
 
 	#generic instructions
-	os.system("chmod +x ./orphilia.py")
+	os.chmod('./orphilia.py',755) # make orphilia.py executable
 	try:
+	# generate directory tree
 		os.mkdir(installdir)
 		os.mkdir(installdir + '/dropbox')
 		os.mkdir(installdir + '/orphilia')
@@ -25,6 +32,7 @@ def install():
 		sys.exit(1)
 	
 	try:
+	# copy all the files
 		shutil.copy('./orphilia.py',installdir)
 	
 		shutil.copy('./dropbox/__init__.pyc',installdir + '/dropbox')
@@ -47,12 +55,12 @@ def install():
 
 		#copy notify scripts
 		shutil.copy('./notify/cli-notify',installdir)
-		os.system('chmod +x ' + installdir + '/cli-notify')
+		os.chmod(installdir + '/cli-notify',755)
 		
 		#copy platform-specific notify scripts
 		if sys.platform[:5] == "haiku":
 			shutil.copy('./notify/haiku-notify',installdir)
-			os.system('chmod +x ' + installdir + '/haiku-notify')
+			os.chmod(installdir + '/haiku-notify',755)
 
 		#copy branding related files
 		shutil.copy('./branding/orphilia.png',installdir + '/branding')
@@ -68,43 +76,47 @@ def install():
 		if sys.platform[:5] == "haiku":
 			shutil.copy('./authorize.yab',installdir + '/authorize.yab')
 			shutil.copy('./yab', installdir)
-			os.system('chmod +x ' + installdir + '/yab')
-			os.system('chmod +x ' + installdir + '/authorize.yab')
+			os.chmod(installdir + '/yab',755)
+			os.chmod(installdir + '/authorize.yab',755)
 	
 		#make symlinks
-		os.system('ln -s ' + installdir + '/orphilia.py ' + bindir + '/orphilia')
-		os.system('ln -s ' + installdir + '/cli-notify ' + bindir + '/orphilia_cli-notify')
-		os.system('ln -s ' + installdir + '/authorize.yab ' + bindir + '/orphilia_haiku-authorize')
+		os.symlink(installdir + '/orphilia.py',bindir + '/orphilia')
+		os.symlink(installdir + '/cli-notify',bindir + '/orphilia_cli-notify')
+		os.symlink(installdir + '/authorize.yab',bindir +'/orphilia_haiku-authorize')
 		
-		if sys.platform[:5] == "haiku":
+		if sys.platform[:5] == 'haiku':
 			os.system('alert --info \"Installation completed.\"')
 			os.system('ln -s ' + installdir + '/haiku-notify ' + bindir + '/orphilia_haiku-notify')
 			
-		print "Done. Now run orphilia --configuration as a regular user"
+		print('Done. Now run orphilia --configuration as a regular user')
 
 	except:
 		print('Installation failed.')
 
 def uninstall():
-	print "Orphilia Installer"
-	print "---"
+	print('Orphilia Installer')
+	print('---')
+	# check if command is supported on this platform
+	if sys.platform[:3] == 'win':
+		print('This function is not available on this platform')
+		sys.exit(1)
     
-	installdir = "/usr/share/orphilia"
-	bindir = "/usr/share/bin"
+	installdir = '/usr/share/orphilia'
+	bindir = '/usr/share/bin'
 	
-	if sys.platform[:5] == "haiku":
-		installdir = "/boot/apps/orphilia"
-		bindir = "/boot/common/bin"
+	if sys.platform[:5] == 'haiku':
+		installdir = '/boot/apps/orphilia'
+		bindir = '/boot/common/bin'
 		
-	os.system("rm -r " + installdir)
-	os.system("rm " + bindir + "/orphilia")
-	os.system("rm " + bindir + "/orphilia_cli-notify")
+	os.remove(installdir)
+	os.remove(bindir + '/orphilia')
+	os.remove(bindir + '/orphilia_cli-notify')
 	
 	if sys.platform[:5] == "haiku":
-		os.system("rm " + bindir + "/orphilia_haiku-notify")
-		os.system("rm " + bindir + "/orphilia_haiku-authorize")
+		os.remove(bindir + '/orphilia_haiku-notify')
+		os.remove(bindir + '/orphilia_haiku-authorize')
 		os.system('alert --info \"Uninstallation completed.\"')
 	else:
-		os.system("rm /usr/share/pixmaps/orphilia.png")
+		os.remove('/usr/share/pixmaps/orphilia.png')
 	
-	print "Done."
+	print('Done.')
