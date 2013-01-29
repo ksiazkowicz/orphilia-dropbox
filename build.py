@@ -40,18 +40,59 @@ def gentree():
 		print("Unable to generate directory tree. Check if you have read/write permissions to this catalog.")
 		sys.exit(1)
 	print(" [OK]")
-
+	
+def make_executable(path):
+	if sys.platform[:5] != "win32":
+		perm = os.stat(path)
+		os.chmod(path, perm.st_mode | stat.S_IEXEC)
+	
+def join_files(fromfile,tofile):
+	try:
+		second = open(fromfile,"r")
+	except:
+		print(fromfile + " not found")
+		raise
+	else:
+		f = open(tofile,"w")
+		f.write(second.read())
+		f.close
+		second.close
+		
 def genorphilia():
 	try:
-		os.system('cat ' + build_path + '/parser/'+ parser + ' >> ' + build_path + '/built/orphilia2.py')
-		os.system('cat orphilia.py >> ' + build_path + '/built/orphilia2.py')
-		os.system("tr -d '\r' <"+build_path+"/built/orphilia2.py> " + build_path + "/built/orphilia.py")
-		os.system('rm ' + build_path + '/built/orphilia2.py')
-		os.system('chmod +x ' + build_path + '/built/orphilia.py')
+		try:
+			join_files(build_path + '/parser/'+ parser,build_path + '/built/orphilia2.py')
+		except:
+			print(" [FAILED]")
+			print("Unable to join files " + build_path + '/parser/'+ parser + " and " + build_path + '/built/orphilia2.py')
+			raise
+		else:
+			try:
+				join_files('orphilia.py',build_path + '/built/orphilia2.py')
+			except:
+				print(" [FAILED]")
+				print("Unable to join files orphilia.py and " + build_path + '/built/orphilia2.py')
+				raise
+			
+		if platform != "win32":		
+			os.system("tr -d '\r' <"+build_path+"/built/orphilia2.py> " + build_path + "/built/orphilia.py")
+		
+		try:
+			os.remove(build_path + '/built/orphilia2.py')
+		except:
+			print(" [FAILED]")
+			print("Unable to remove "+ build_path + "/build/orphilia2.py")
+			raise
+		
+		try:
+			make_executable(build_path + '/built/orphilia.py')
+		except:
+			print("Unable to set executable bit for " + build_path + '/built/orphilia.py')
+			
 	except:
-		print(" [FAILED]")
 		print("Unable to generate orphilia.py. Check if you have read/write permissions to this catalog.")
 		sys.exit(1)
+		
 	print(" [OK]")
 
 def copyfiles():
@@ -116,9 +157,21 @@ def buildorphilia():
 			shutil.copy(build_path + '/haiku-gui/yab',build_path + '/built')
 
 			shutil.copy(build_path + '/haiku-gui/img/step.png',build_path + '/built/img')
-
-			os.system('chmod +x ' + build_path + '/built/yab')
-			os.system('chmod +x ' + build_path + '/built/install_haiku.sh')
+			
+			make_executable(build_path + '/built/yab')
+			make_executable(build_path + '/built/install_haiku.sh')
+			
+		except:
+			print(" [FAILED]")
+			print("Check if you have read/write permissions to this catalog.")
+			sys.exit(1)
+		print(" [OK]")
+		
+	if platform[:5] == "win32":
+		print("Copying platform-specific files..."),
+		try:
+			shutil.copy(build_path + '/windows-workaround/orphilia.bat',build_path + '/built')
+			
 		except:
 			print(" [FAILED]")
 			print("Check if you have read/write permissions to this catalog.")
@@ -132,6 +185,22 @@ if platform[:5] == "haiku":
 	print(" Haiku [OK]")
 	parser = 'haiku-parser.py'
 	buildorphilia()
+	
+if platform[:5] == "win32":
+	try:
+		sys.argv[1]
+	except:
+		print(" win32 [FAILED]")
+	else:
+		if sys.argv[1] == "--force":
+			parser = 'haiku-parser.py'
+			buildorphilia()
+		elif sys.argv[2] == "--force":
+			parser = 'haiku-parser.py'
+			buildorphilia()
+		else:
+			print(" win32 [FAILED]")
+			print("Argument invalid. Try \"--force\"")
 
 elif platform[:5] == "linux":
 	print(" Linux [OK]")
