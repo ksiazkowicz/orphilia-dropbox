@@ -4,16 +4,23 @@ import os
 import sys
 import shutil
 
-build_path = os.getcwdu()
+build_path = os.getcwd()
 parser = 'generic-parser.py'
 
+try:
+	sys.argv[1]
+except:
+	platform=sys.platform
+else:
+	platform=sys.argv[1]
+	
 def gentree():
 	try:
 		if os.path.exists(build_path + "/built"):
 			shutil.rmtree(build_path + "/built")
 	except:
-		print ' [FAILED]'
-		print "Error while removing old files. Check if you have read/write permissions to this catalog."
+		print(" [FAILED]")
+		print("Error while removing old files. Check if you have read/write permissions to this catalog.")
 		sys.exit(1)
 
 	try:
@@ -23,16 +30,16 @@ def gentree():
 		os.mkdir(build_path + '/built/orphilia')
 		os.mkdir(build_path + '/built/shared')
 
-		if sys.platform[:5] == "haiku":
+		if platform[:5] == "haiku":
 			os.mkdir(build_path + '/built/img')
 
 		os.mkdir(build_path + '/built/branding')
 		os.mkdir(build_path + '/built/notify')
 	except:
-		print ' [FAILED]'
-		print "Unable to generate directory tree. Check if you have read/write permissions to this catalog."
+		print(" [FAILED]")
+		print("Unable to generate directory tree. Check if you have read/write permissions to this catalog.")
 		sys.exit(1)
-	print ' [OK]'
+	print(" [OK]")
 
 def genorphilia():
 	try:
@@ -42,10 +49,10 @@ def genorphilia():
 		os.system('rm ' + build_path + '/built/orphilia2.py')
 		os.system('chmod +x ' + build_path + '/built/orphilia.py')
 	except:
-		print ' [FAILED]'
-		print "Unable to generate orphilia.py. Check if you have read/write permissions to this catalog."
+		print(" [FAILED]")
+		print("Unable to generate orphilia.py. Check if you have read/write permissions to this catalog.")
 		sys.exit(1)
-	print ' [OK]'
+	print(" [OK]")
 
 def copyfiles():
 	try:
@@ -86,22 +93,22 @@ def copyfiles():
 		shutil.copy(build_path + '/README',build_path + '/built')
 		shutil.copy(build_path + '/modules/dropbox/trusted-certs.crt',build_path + '/built/dropbox')
 	except:
-		print ' [FAILED]'
-		print "Unable to copy files. Check if you have read/write permissions to this catalog."
+		print(" [FAILED]")
+		print("Unable to copy files. Check if you have read/write permissions to this catalog.")
 		sys.exit(1)
-	print ' [OK]'
+	print(" [OK]")
 
 def buildorphilia():
-	print 'Generating tree...',
+	print("Generating tree..."),
 	gentree()
-	print 'Generating orphilia.py...',
+	print("Generating orphilia.py..."),
 	genorphilia()
-	print 'Copying additional files...',
+	print("Copying additional files..."),
 	copyfiles()
 	
 	#platform specific
-	if sys.platform[:5] == "haiku":
-		print 'Copying platform-specific files...',
+	if platform[:5] == "haiku":
+		print("Copying platform-specific files..."),
 		try:
 			shutil.copy(build_path + '/haiku-gui/authorize.yab',build_path + '/built')
 			shutil.copy(build_path + '/haiku-gui/configuration.yab',build_path + '/built')
@@ -113,26 +120,26 @@ def buildorphilia():
 			os.system('chmod +x ' + build_path + '/built/yab')
 			os.system('chmod +x ' + build_path + '/built/install_haiku.sh')
 		except:
-			print ' [FAILED]'
-			print "Check if you have read/write permissions to this catalog."
+			print(" [FAILED]")
+			print("Check if you have read/write permissions to this catalog.")
 			sys.exit(1)
-		print ' [OK]'
+		print(" [OK]")
 
-print 'Parsing build scripts'
-print 'Identifying platform...',
+print("Parsing build scripts")
+print("Identifying platform..."),
 
-if sys.platform[:5] == "haiku":
-	print ' Haiku [OK]'
+if platform[:5] == "haiku":
+	print(" Haiku [OK]")
 	parser = 'haiku-parser.py'
 	buildorphilia()
 
-elif sys.platform[:5] == "linux":
-	print ' Linux [OK]'
+elif platform[:5] == "linux":
+	print(" Linux [OK]")
 	buildorphilia()
 
-elif sys.platform[:7] == "freebsd":
-	print ' FreeBSD [OK]'
+elif platform[:7] == "freebsd":
+	print(" FreeBSD [OK]")
 	buildorphilia()
 else:
-	print ' [FAILED]'
-	print 'Platform "' + sys.platform + '" is currently unsupported.'
+	print(" [FAILED]")
+	print("Platform " + platform + " is currently unsupported.")
