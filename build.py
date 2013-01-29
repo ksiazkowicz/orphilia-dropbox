@@ -12,7 +12,10 @@ try:
 except:
 	platform=sys.platform
 else:
-	platform=sys.argv[1]
+	if sys.argv[1] != "--force":
+		platform=sys.argv[1]
+	else:
+		platform=sys.platform
 	
 def gentree():
 	try:
