@@ -1,0 +1,28 @@
+Dropbox Python SDK
+==================
+
+A Python module that provides the tools you need to authenticate with, and use the Dropbox API.
+
+Upgrading from v0
+-----------------
+If you're upgrading from the original Python SDK (v0), you will need to uninstall it to avoid conflicts when you import the v1 dropbox module from your code. First find and delete the dropbox_client-1.0-*.egg package.
+
+*   To find this package on Mac/Linux, you can run this command in a terminal:
+        $ echo "`python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'`"/dropbox_client-1.0-*.egg
+*   On Windows you will need to locate the site-packages directory (likely in C:\PythonXX\Lib\site-packages, where XX is your version)
+
+You should also then delete the corresponding dropbox_client line in site-packages/easy-install.pth, if it exists.
+
+Getting started 
+---------------
+To set up the Dropbox module and install dependencies:
+
+1.  Run the setup script:
+        $ python setup.py install -f
+2.  Enter your application's key and secret (found on http://www.dropbox.com/developers/apps) in example/cli_client.py 
+3.  Try out the Dropbox "shell" by running the cli_client example app. Run: 
+        $ python example/cli_client.py
+4.  Start developing your Dropbox API application!
+
+For more information, including tutorials, check out http://www.dropbox.com/developers/start
+
