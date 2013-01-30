@@ -15,7 +15,7 @@ from shared import date_rewrite, path_rewrite
 APP_KEY = 'ij4b7rjc7tsnlj4'
 APP_SECRET = '00evf045y00ml2e'
 ACCESS_TYPE = 'dropbox'
-SDK_VERSION = "1.4"
+SDK_VERSION = "1.5"
 
 home = os.path.expanduser('~')
 

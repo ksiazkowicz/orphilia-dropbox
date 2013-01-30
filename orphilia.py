@@ -46,7 +46,7 @@ elif wtd == "--help":
 	""")
 
 elif wtd == "--configuration":
-    orphilia.config.config(cmd)
+    orphilia.config.config()
 
 elif wtd == "--configuration-haiku":
     orphilia.config.config_gui(cmd)
