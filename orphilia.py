@@ -6,7 +6,7 @@ import sys
 import orphilia
 
 if len(sys.argv) > 1:
-	cmd = dict(for arg in sys.argv[2:])
+	cmd = dict(sys.argv for arg in sys.argv[2:])
 	wtd = sys.argv[1]
 else:
 	wtd = "brick"

@@ -22,8 +22,8 @@ Building:
 Haiku/Linux/FreeBSD:
 	python build.py
 
-Windows (not working): 
-	Run build.bat
+Windows: 
+	python build.py --force
 
 
 Installing

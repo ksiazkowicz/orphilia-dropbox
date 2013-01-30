@@ -79,6 +79,8 @@ def genorphilia():
 			
 		if platform != "win32":		
 			os.system("tr -d '\r' <"+build_path+"/built/orphilia2.py> " + build_path + "/built/orphilia.py")
+		else:
+			shutil.copy(build_path+"/built/orphilia2.py",build_path + "/built/orphilia.py")
 		
 		try:
 			os.remove(build_path + '/built/orphilia2.py')
@@ -103,7 +105,8 @@ def copyfiles():
 		#copy Dropbox libraries
 		shutil.copy(build_path + '/modules/dropbox/__init__.py',build_path + '/built/dropbox')
 		shutil.copy(build_path + '/modules/dropbox/six.py',build_path + '/built/dropbox')
-		shutil.copy(build_path + '/modules/dropbox/client.py',build_path + '/built/dropbox')
+		shutil.copy(build_path + '/modules/dropbox/six.py',build_path + '/built/dropbox')
+		shutil.copy(build_path + '/modules/dropbox/util.py',build_path + '/built/dropbox')
 		shutil.copy(build_path + '/modules/dropbox/session.py',build_path + '/built/dropbox')
 		shutil.copy(build_path + '/modules/dropbox/rest.py',build_path + '/built/dropbox')
 
