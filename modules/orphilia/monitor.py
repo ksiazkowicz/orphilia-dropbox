@@ -11,7 +11,7 @@ home = os.path.expanduser('~')
 # set configurationdir path dependent from platform
 if sys.platform[:5] == "haiku":
 	configurationdir = os.path.normpath(home + '/config/settings/Orphilia/')
-elif sys.platform[:3] == 'win'
+elif sys.platform[:3] == 'win':
 	configurationdir = os.path.normpath(home + '/AppData/Roaming/Orphilia/')
 else:
 	configurationdir = os.path.normpath(home + '/.orphilia/')

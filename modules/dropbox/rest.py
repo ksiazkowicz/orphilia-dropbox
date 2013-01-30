@@ -12,13 +12,14 @@ import ssl
 import sys
 import urllib
 import urlparse
+from . import util
 
 try:
     import json
 except ImportError:
     import simplejson as json
 
-SDK_VERSION = "1.4.1"
+SDK_VERSION = "1.5.1"
 
 TRUSTED_CERT_FILE = pkg_resources.resource_filename(__name__, 'trusted-certs.crt')
 
@@ -145,48 +146,36 @@ class RESTClientObject(object):
         conn = http_connect(host, 443)
 
         try:
-
             # This code is here because httplib in pre-2.6 Pythons
             # doesn't handle file-like objects as HTTP bodies and
             # thus requires manual buffering
             if not hasattr(body, 'read'):
                 conn.request(method, url, body, headers)
             else:
-
-                #We need to get the size of what we're about to send for the Content-Length
-                #Must support len() or have a len or fileno(), otherwise we go back to what we were doing!
-                clen = None
-
-                try:
-                    clen = len(body)
-                except (TypeError, AttributeError):
-                    try:
-                        clen = body.len
-                    except AttributeError:
-                        try:
-                            clen = os.fstat(body.fileno()).st_size
-                        except AttributeError:
-                            # fine, lets do this the hard way
-                            # load the whole file at once using readlines if we can, otherwise
-                            # just turn it into a string
-                            if hasattr(body, 'readlines'):
-                                body = body.readlines()
-                            conn.request(method, url, str(body), headers)
-
-                if clen != None:  #clen == 0 is perfectly valid. Must explicitly check for None
-                    clen = str(clen)
-                    headers["Content-Length"] = clen
-                    conn.request(method, url, "", headers)
-                    BLOCKSIZE = 4096 #4MB buffering just because
-
-                    data=body.read(BLOCKSIZE)
-                    while data:
+                # Content-Length should be set to prevent upload truncation errors.
+                clen, raw_data = util.analyze_file_obj(body)
+                headers["Content-Length"] = str(clen)
+                conn.request(method, url, "", headers)
+                if raw_data is not None:
+                    conn.send(raw_data)
+                else:
+                    BLOCKSIZE = 4 * 1024 * 1024 # 4MB buffering just because
+                    bytes_read = 0
+                    while True:
+                        data = body.read(BLOCKSIZE)
+                        if not data:
+                            break
+                        # Catch Content-Length overflow before the HTTP server does
+                        bytes_read += len(data)
+                        if bytes_read > clen:
+                            raise util.AnalyzeFileObjBug(clen, bytes_read)
                         conn.send(data)
-                        data=body.read(BLOCKSIZE)
+                    if bytes_read != clen:
+                        raise util.AnalyzeFileObjBug(clen, bytes_read)
 
-        except socket.error, e:
-            raise RESTSocketError(host, e)
-        except CertificateError, e:
+        except socket.error as e:
+            raise RESTSocketError(host,e)
+        except CertificateError as e:
             raise RESTSocketError(host, "SSL certificate error: " + e)
 
         r = conn.getresponse()
@@ -235,28 +224,28 @@ class RESTClient(object):
         """Perform a REST request and parse the response.
 
         Args:
-            method: An HTTP method (e.g. 'GET' or 'POST').
-            url: The URL to make a request to.
-            post_params: A dictionary of parameters to put in the body of the request.
-                This option may not be used if the body parameter is given.
-            body: The body of the request. Typically, this value will be a string.
-                It may also be a file-like object in Python 2.6 and above. The body
-                parameter may not be used with the post_params parameter.
-            headers: A dictionary of headers to send with the request.
-            raw_response: Whether to return the raw httplib.HTTPReponse object. [default False]
-                It's best enabled for requests that return large amounts of data that you
-                would want to .read() incrementally rather than loading into memory. Also
-                use this for calls where you need to read metadata like status or headers,
-                or if the body is not JSON.
+            - ``method``: An HTTP method (e.g. 'GET' or 'POST').
+            - ``url``: The URL to make a request to.
+            - ``post_params``: A dictionary of parameters to put in the body of the request.
+              This option may not be used if the body parameter is given.
+            - ``body``: The body of the request. Typically, this value will be a string.
+              It may also be a file-like object in Python 2.6 and above. The body
+              parameter may not be used with the post_params parameter.
+            - ``headers``: A dictionary of headers to send with the request.
+            - ``raw_response``: Whether to return the raw httplib.HTTPReponse object. [default False]
+              It's best enabled for requests that return large amounts of data that you
+              would want to .read() incrementally rather than loading into memory. Also
+              use this for calls where you need to read metadata like status or headers,
+              or if the body is not JSON.
 
         Returns:
-            The JSON-decoded data from the server, unless raw_response is
-            specified, in which case an httplib.HTTPReponse object is returned instead.
+            - The JSON-decoded data from the server, unless raw_response is
+              specified, in which case an httplib.HTTPReponse object is returned instead.
 
         Raises:
-            dropbox.rest.ErrorResponse: The returned HTTP status is not 200, or the body was
-                not parsed from JSON successfully.
-            dropbox.rest.RESTSocketError: A socket.error was raised while contacting Dropbox.
+            - dropbox.rest.ErrorResponse: The returned HTTP status is not 200, or the body was
+              not parsed from JSON successfully.
+            - dropbox.rest.RESTSocketError: A socket.error was raised while contacting Dropbox.
         """
         return cls.IMPL.request(*n, **kw)
 
@@ -305,9 +294,9 @@ class ErrorResponse(Exception):
         self.headers = http_resp.getheaders()
 
         try:
-            body = json_loadb(self.body)
-            self.error_msg = body.get('error')
-            self.user_error_msg = body.get('user_error')
+            self.body = json_loadb(self.body)
+            self.error_msg = self.body.get('error')
+            self.user_error_msg = self.body.get('user_error')
         except ValueError:
             self.error_msg = None
             self.user_error_msg = None
