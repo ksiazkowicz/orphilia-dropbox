@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import time
+import orphilia
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -29,10 +30,13 @@ def monitor():
 
             what = 'directory' if event.is_directory else 'file'
             if what == "file":
-                 os.system('orphilia --client--silent \"mv \\"' + path + '\\" \\"' + path2 + '\\"\"')
+                 tmp = { 'mv', path, path2}
+                 orphilia.client.orphilia_client(tmp)
             else:
-                 os.system('orphilia --client--silent \"mkdir \'' + path2 + '\'\"')
-                 os.system('orphilia --client--silent \"rm \'' + path + '\'\"')
+                 tmp = { 'mkdir', path2 }
+                 orphilia.client.orphilia_client(tmp)
+                 tmp = { 'rm', path }
+                 orphilia.client.orphilia_client(tmp)
             logging.info("Moved %s: from %s to %s", what, event.src_path,
                          event.dest_path)
 
@@ -49,19 +53,22 @@ def monitor():
                                   if size1 == size2:
                                      break
                             path = par[len(droppath)+1:]
-                            os.system('orphilia --client--silent \"put \\"' + droppath +"/"+ path + '\\" \\"' + path + '\\"\"')
+                            tmp = { 'put', droppath + path, path }
+                            orphilia.client.orphilia_client(tmp)
                     else:
                             par = event.src_path
                             path = par[len(droppath)+1:]
                             print('orphilia --client--silent \"mkdir \'' + path + '\'\"')
-                            os.system('orphilia --client--silent \"mkdir \'' + path + '\'\"')
+                            tmp = { 'mkdir', path}
+                            orphilia.client.orphilia_client(tmp)
                     logging.info("Created %s: %s", what, event.src_path)
             else:
                     what = 'directory' if event.is_directory else 'file'
                     if what == 'directory':
                             par = event.src_path
                             path = par[len(droppath)+1:]
-                            os.system('orphilia --client--silent \"mkdir \'' + path + '\'\"')
+                            tmp = { 'mkdir', path}
+                            orphilia.client.orphilia_client(tmp)
                             logging.info("Created %s: %s", what, event.src_path)
 
         def on_deleted(self, event):
@@ -69,7 +76,8 @@ def monitor():
             par = event.src_path
             path = par[len(droppath)+1:]
             what = 'directory' if event.is_directory else 'file'
-            os.system('orphilia --client--silent \"rm \'' + path + '\'\"')
+            tmp = { 'rm', path }
+            orphilia.client.orphilia_client(tmp)
             logging.info("Deleted %s: %s", what, event.src_path)
 
         def on_modified(self, event):
@@ -80,8 +88,10 @@ def monitor():
                par = event.src_path
                path = par[len(droppath)+1:]
                if os.name <> "nt":
-                  os.system('orphilia --client--silent \"rm \'' + path + '\'\"')
-               os.system('orphilia --client--silent \"upd \'' + droppath +"/"+ path + '\' \'' + path + '\'\"')
+                  tmp = { 'rm', 'path'}
+                  orphilia.client.orphilia_client(tmp)
+               tmp = { 'upd', droppath + '/' + path, path}
+               orphilia.client.orphilia_client(tmp)
             logging.info("Modified %s: %s", what, event.src_path)
 
     read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')

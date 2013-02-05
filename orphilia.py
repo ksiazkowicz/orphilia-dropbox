@@ -6,7 +6,7 @@ import sys
 import orphilia
 
 if len(sys.argv) > 1:
-	cmd = dict(sys.argv for arg in sys.argv[2:])
+	cmd = dict(sys.argv for arg in sys.argv[3:])
 	wtd = sys.argv[1]
 else:
 	wtd = "brick"
@@ -18,10 +18,10 @@ elif wtd == "--client--silent":
     orphilia.client.orphilia_client(cmd)
 
 elif wtd == "--install":
-    orphilia.installer.install(cmd)
+    orphilia.installer.install()
 
 elif wtd == "--uninstall":
-    orphilia.installer.uninstall(cmd)
+    orphilia.installer.uninstall()
 
 elif wtd == "--help":
 	print("""\n
@@ -52,7 +52,7 @@ elif wtd == "--configuration-haiku":
     orphilia.config.config_gui(cmd)
 
 elif wtd == "--monitor":
-    orphilia.monitor.monitor(cmd)
+    orphilia.monitor.monitor()
 
 elif wtd == "--public":
     orphilia.client.public(cmd)

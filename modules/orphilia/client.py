@@ -19,10 +19,14 @@ SDK_VERSION = "1.5"
 
 home = os.path.expanduser('~')
 
-if sys.platform[:5] == "haiku":
+# set configurationdir path dependent from platform
+if sys.platform[:5] == 'haiku':
 	configurationdir = os.path.normpath(home + '/config/settings/Orphilia/')
+elif sys.platform[:3] == 'win':
+	configurationdir = os.path.normpath(home + '/AppData/Roaming/Orphilia/')
 else:
 	configurationdir = os.path.normpath(home + '/.orphilia/')
+	
 STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
 
 def putin(string,filename,method):
@@ -160,7 +164,7 @@ def save_state(state):
 ###################################################
 ######################## TU ZACZYNA SIE KLIENT!
 
-def orphilia_client():
+def orphilia_client(cmd):
 	statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
 	status = statusf.read()
 	statusf.close()
