@@ -95,7 +95,7 @@ def monitor():
 				if os.name == "nt":
 					path = path_rewrite.rewritepath('posix',path)
 				if os.name <> "nt":
-					tmp = [ 'rm', 'path' ]
+					tmp = [ 'rm', path ]
 					queue.put(orphilia.client.client_new(tmp))
 				while True:
 					size1 = os.path.getsize(par)

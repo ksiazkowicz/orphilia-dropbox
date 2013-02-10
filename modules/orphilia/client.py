@@ -28,6 +28,7 @@ APP_KEY = 'ij4b7rjc7tsnlj4'
 APP_SECRET = '00evf045y00ml2e'
 ACCESS_TYPE = 'dropbox'
 SDK_VERSION = "1.5"
+delta_switch = 0
 
 home = os.path.expanduser('~')
 
@@ -39,6 +40,67 @@ droppath = read_details.read()
 read_details.close()
 STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
 
+# initialize Dropbox session
+##################################
+#########################
+###########
+# a wrapper around DropboxSession that stores a token to a file on disk
+# (from Dropbox cli_client.py example)
+class StoredSession(session.DropboxSession):
+	TOKEN_FILE = os.path.normpath(configurationdir + "/token_store.txt")
+
+	def load_creds(self):
+		print(" > Loading access token..."),
+		try:
+			stored_creds = open(self.TOKEN_FILE).read()
+			self.set_token(*stored_creds.split('|'))
+			print(" OK")
+		except IOError:
+			print(" FAILED")
+			print(" x Access token not found. Beggining new session.")
+			self.link()
+
+	def write_creds(self, token):
+		f = open(self.TOKEN_FILE, 'w')
+		f.write("|".join([token.key, token.secret]))
+		f.close()
+
+	def delete_creds(self):
+		os.unlink(self.TOKEN_FILE)
+	
+	def link(self):
+		print(" > Authorizing...")
+		request_token = self.obtain_request_token()
+		url = self.build_authorize_url(request_token)
+		# some code to make this fancy window with URL show up in Haiku OS
+		if sys.platform[:5] == "haiku":
+			putin(url,os.path.normpath(configurationdir+'/authorize-url'),'rewrite')
+			drmchujnia = os.system("orphilia_haiku-authorize")
+			os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
+		else:
+			print("url:", url),
+			raw_input()
+
+		self.obtain_access_token(request_token)
+		self.write_creds(self.token)
+
+		save_state({
+			'access_token': (request_token.key, request_token.secret),
+			'tree': {}
+		})
+
+	def unlink(self):
+		self.delete_creds()
+		session.DropboxSession.unlink(self)
+if APP_KEY == '' or APP_SECRET == '':
+	exit(' x You need to set your APP_KEY and APP_SECRET!')
+	
+# defines 'sess' and 'api_client' to simplify the code
+sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
+api_client = client.DropboxClient(sess)
+sess.load_creds()
+
+##################### some internal procedures #
 def putin(string,filename,method):
 	if method == "append":
 		putinfile = open(filename,"a")
@@ -88,11 +150,12 @@ class Node(object):
 			return jcontent
 
 def apply_delta(root, e):
+	chleb = Queue.Queue(0)
 	path, metadata = e
 	branch, leaf = split_path(path)
 
 	if metadata is not None:
-		print('+ %s\n' % path)
+		print(' + ' + path)
 		# Traverse down the tree until we find the parent folder of the entry
 		# we want to add. Create any missing folders along the way.
 		children = root
@@ -110,17 +173,36 @@ def apply_delta(root, e):
 			# Only create an empty folder if there isn't one there already.
 			if not node.is_folder():
 				node.content = {}
+			if delta_switch == 0:
+				try:
+					os.mkdir(droppath + "/" + path)
+				except:
+					pass
 		else:
 			node.content = metadata['size'], metadata['modified']
+			tmp = [ 'get', path, droppath + "/" + path]
+			if delta_switch == 0:
+				try:
+					chleb.put(client_new(tmp))
+				except:
+					print(" x Something went wrong")
 	else:
-		print('- %s\n' % path)
+		print(' - ' + path)
+		if delta_switch == 0:
+			try:
+				chleb.put(os.remove(droppath + '/' + path))
+			except:
+				print(' x Something went wrong')
+	
 		# Traverse down the tree until we find the parent of the entry we
 		# want to delete.
 		children = root
 		for part in branch:
 			node = children.get(part)
 			# If one of the parent folders is missing, then we're done.
-			if node is None or not node.is_folder(): break
+			if node is None or not node.is_folder(): 
+				chleb.put(os.rmtree(droppath+path)) 
+				break
 			children = node.content
 		else:
 			# If we made it all the way, delete the file/folder (if it exists).
@@ -368,65 +450,6 @@ def orphilia_client(parameters):
 #
 	
 def client_new(parameters):
-	# a wrapper around DropboxSession that stores a token to a file on disk
-	# (from Dropbox cli_client.py example)
-	class StoredSession(session.DropboxSession):
-		TOKEN_FILE = os.path.normpath(configurationdir + "/token_store.txt")
-
-		def load_creds(self):
-			print(" > Loading access token..."),
-			try:
-				stored_creds = open(self.TOKEN_FILE).read()
-				self.set_token(*stored_creds.split('|'))
-				print(" OK")
-			except IOError:
-				print(" FAILED")
-				print(" x Access token not found. Beggining new session.")
-				self.link()
-
-		def write_creds(self, token):
-			f = open(self.TOKEN_FILE, 'w')
-			f.write("|".join([token.key, token.secret]))
-			f.close()
-
-		def delete_creds(self):
-			os.unlink(self.TOKEN_FILE)
-	
-		def link(self):
-			print(" > Authorizing...")
-			request_token = self.obtain_request_token()
-			url = self.build_authorize_url(request_token)
-			# some code to make this fancy window with URL show up in Haiku OS
-			if sys.platform[:5] == "haiku":
-					putin(url,os.path.normpath(configurationdir+'/authorize-url'),'rewrite')
-					drmchujnia = os.system("orphilia_haiku-authorize")
-					os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
-			else:
-					print("url:", url),
-					raw_input()
-
-			self.obtain_access_token(request_token)
-			self.write_creds(self.token)
-
-			save_state({
-				'access_token': (request_token.key, request_token.secret),
-				'tree': {}
-			})
-
-		def unlink(self):
-			self.delete_creds()
-			session.DropboxSession.unlink(self)
-	
-	# checks if APP_KEY and APP_SECRET are not empty
-	if APP_KEY == '' or APP_SECRET == '':
-		exit(' x You need to set your APP_KEY and APP_SECRET!')
-		
-	# defines 'sess' and 'api_client' to simplify the code
-	sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
-	api_client = client.DropboxClient(sess)
-	# 
-	sess.load_creds()
-	
 	cmd = parameters[0]
 	
 	if cmd == "ls":
@@ -450,6 +473,12 @@ def client_new(parameters):
 		page = 0
 		changed = False
 		page_limit = 5
+		
+		try:
+			delta_switch = parameter[1]
+		except:
+			delta_switch = 0
+		
 		while (page_limit is None) or (page < page_limit):
 			# Get /delta results from Dropbox
 			result = api_client.delta(cursor)
@@ -473,23 +502,13 @@ def client_new(parameters):
 			state['cursor'] = cursor
 			state['tree'] = tree
 			save_state(state)
-			
-	elif cmd == "ls_alt":
-		path = parameters[1]
-		to_file = parameters[2]
-
-		resp = self.api_client.metadata(path)
-		a = unicode(resp)
-		file = open(to_file,"w")
-		print >> file, a
-		file.close()
 		
 	elif cmd == "put":
 		from_path = parameters[1]
 		to_path = parameters[2]
 		notify = parameters[3] # it can be 'add' or 'upd'
 		
-		from_file = open(os.path.expanduser(from_path))
+		from_file = open(os.path.expanduser(from_path), 'rb')
 		#try:
 		api_client.put_file("/" + to_path, from_file)
 		#except:
@@ -552,7 +571,7 @@ def client_new(parameters):
 		date1 = modified[5:]
 		date1 = date_rewrite.generate_modifytime(date1)
 		f = api_client.get_file("/" + from_path)
-		file = open(to_path,"w")
+		file = open(to_path,"wb")
 		try:
 			file.write(f.read())
 		except:
