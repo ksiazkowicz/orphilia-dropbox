@@ -612,11 +612,11 @@ def client_new(parameters):
 		to_path = parameters[2]
 		notify = parameters[3] # it can be 'add' or 'upd'
 		
-		from_file = open(os.path.expanduser(from_path))
-		#try:
-		api_client.put_file("/" + to_path, from_file)
-		#except:
-		#	print(" x Unable to upload file. ")
+		from_file = open(os.path.expanduser(from_path), 'rb')
+		try:
+			api_client.put_file("/" + to_path, from_file)
+		except:
+			print(" x Unable to upload file. ")
 		orphilia_notify(notify,from_path)
 		
 	elif cmd == "unlink":
@@ -630,11 +630,14 @@ def client_new(parameters):
 
 	elif cmd == "mkdir":
 		path = parameters[1]
-		api_client.file_create_folder("/" + path)
+		try:
+			api_client.file_create_folder("/" + path)
+		except:
+			print(" x Unable to make directory " + path)
 		print(" > Directory \'" + path + "\' created")
 	
 	elif cmd == "rm":
-		path = parameters[1]
+		path = path_rewrite.rewritepath('posix',parameters[1])
 		try:
 			api_client.file_delete("/" + path)
 			orphilia_notify('rm',path)
