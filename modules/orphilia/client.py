@@ -8,16 +8,10 @@ import pprint
 import shlex
 import json
 
+import Queue
+
 from dropbox import client, rest, session
 from shared import date_rewrite, path_rewrite
-
-# Dropbox SDK related parameters
-APP_KEY = 'ij4b7rjc7tsnlj4'
-APP_SECRET = '00evf045y00ml2e'
-ACCESS_TYPE = 'dropbox'
-SDK_VERSION = "1.5"
-
-home = os.path.expanduser('~')
 
 def get_configdir():
 	home = os.path.expanduser('~')
@@ -29,8 +23,20 @@ def get_configdir():
 		configurationdir = os.path.normpath(home + '/.orphilia/')
 	return configurationdir
 
+# Dropbox SDK related parameters
+APP_KEY = 'ij4b7rjc7tsnlj4'
+APP_SECRET = '00evf045y00ml2e'
+ACCESS_TYPE = 'dropbox'
+SDK_VERSION = "1.5"
+
+home = os.path.expanduser('~')
+
 # set configurationdir path dependent from platform
 configurationdir = get_configdir()
+
+read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
+droppath = read_details.read()
+read_details.close()
 STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
 
 def putin(string,filename,method):
@@ -174,9 +180,6 @@ def orphilia_client(parameters):
 	statusf.close()
 	if status == "1":
 		exit()
-	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-	droppath = read_details.read()
-	read_details.close()
 
 	def command(login_required=True):
 		def decorate(f):
@@ -215,61 +218,6 @@ def orphilia_client(parameters):
 			self.sess.load_creds()
 
 		@command()
-		def do_delta(self):
-			state = load_state()
-			cursor = state.get('cursor')
-			tree = state['tree']
-			page = 0
-			changed = False
-			page_limit = 5
-			while (page_limit is None) or (page < page_limit):
-				# Get /delta results from Dropbox
-				result = self.api_client.delta(cursor)
-				page += 1
-				if result['reset'] == True:
-					sys.stdout.write('reset\n')
-					changed = True
-					tree = {}
-				cursor = result['cursor']
-				# Apply the entries one by one to our cached tree.
-				for delta_entry in result['entries']:
-					changed = True
-					apply_delta(tree, delta_entry)
-					cursor = result['cursor']
-					if not result['has_more']: break
-
-			if not changed:
-				sys.stdout.write('No updates.\n')
-			else:
-			# Save state
-				state['cursor'] = cursor
-				state['tree'] = tree
-				save_state(state)
-			print(" > Command '" + parameters[1] + "' executed")
-
-		@command()
-		def do_ls(self,path, to_file):
-			resp = self.api_client.metadata(path)
-			file = open(to_file,"w")
-
-			if 'contents' in resp:
-				for f in resp['contents']:
-					name = os.path.basename(f['path'])
-					encoding = locale.getdefaultlocale()[1]
-					file.write(('%s\n' % name).encode(encoding))
-			file.close()
-			print(" > Command '" + parameters[1] + "' executed")
-
-		@command()
-		def do_ls_alt(self, path, to_file):
-			resp = self.api_client.metadata(path)
-			a = unicode(resp)
-			file = open(to_file,"w")
-			print >> file, a
-			file.close()
-			print(" > Command '" + parameters[1] + "' executed")
-
-		@command()
 		def do_sync_everything(self, path):
 			term = DropboxTerm(APP_KEY, APP_SECRET)
 			resp = self.api_client.metadata(path)
@@ -288,20 +236,6 @@ def orphilia_client(parameters):
 			os.system("chmod +x " + to_file)
 			os.system("sh " + to_file)
 			os.system("rm " + to_file)
-			print(" > Command '" + parameters[1] + "' executed")
-
-		@command()
-		def do_get(self, path, to_path):
-			resp = self.api_client.metadata(path)
-			modified = resp['modified']
-			date1 = modified[5:]
-			date1 = date_rewrite.generate_modifytime(date1)
-			f = self.api_client.get_file("/" + path)
-			file = open(to_path,"w")
-			file.write(f.read())
-			file.close()
-			os.system("touch -d \"" + date1 + "\" \"" + to_path + "\"")
-			
 			print(" > Command '" + parameters[1] + "' executed")
 
 		@command()
@@ -360,63 +294,6 @@ def orphilia_client(parameters):
 							print(" x File \"" + ('%s' % name).encode(encoding) + "\" is identical. Skipping.")
 
 				print(" > Command '" + parameters[1] + "' executed")
-	
-		@command()
-		def do_logout(self):
-			self.sess.unlink()
-			print(" > Unlinked ;(")
-
-		@command()
-		def do_cat(self, path):
-			f = self.api_client.get_file("/" + path)
-			self.stdout.write(f.read())
-			self.stdout.write("\n")
-
-		@command()
-		def do_mkdir(self, path):
-			self.api_client.file_create_folder("/" + path)
-			print(" > Directory \'" + path + "\' created")
-	
-		@command()
-		def do_rm(self, path):
-			"""delete a file or directory"""
-			self.api_client.file_delete("/" + path)
-			orphilia_notify('rm',path)
-
-		@command()
-		def do_mv(self, from_path, to_path):
-			"""move/rename a file or directory"""
-			self.api_client.file_move("/" + from_path,
-									  "/" + to_path)
-			print(" > Command '" + parameters[1] + "' executed")
-	
-		@command()
-		def do_account_info(self):
-			f = self.api_client.account_info()
-			pprint.PrettyPrinter(indent=2).pprint(f)
-			print(" > Command '" + parameters[1] + "' executed")
-
-		@command()
-		def do_uid(self, parameter2):
-			f = self.api_client.account_info()
-			uid = str(f['uid'])
-			putin(uid,parameter2,'rewrite')
-			print(" > UID updated")
-
-		@command()
-		def do_put(self, from_path, to_path):
-			from_file = open(os.path.expanduser(from_path))
-
-			self.api_client.put_file("/" + to_path, from_file)
-			orphilia_notify('add',from_path)
-
-		@command()
-		def do_upd(self, from_path, to_path):
-			from_file = open(os.path.expanduser(from_path))
-			
-			self.api_client.rm_file("/" + to_path)
-			self.api_client.put_file("/" + to_path, from_file)
-			orphilia_notify('upd',from_path)
 	
 		# the following are for command line magic and aren't Dropbox-related
 		def emptyline(self):
@@ -612,11 +489,11 @@ def client_new(parameters):
 		to_path = parameters[2]
 		notify = parameters[3] # it can be 'add' or 'upd'
 		
-		from_file = open(os.path.expanduser(from_path), 'rb')
-		try:
-			api_client.put_file("/" + to_path, from_file)
-		except:
-			print(" x Unable to upload file. ")
+		from_file = open(os.path.expanduser(from_path))
+		#try:
+		api_client.put_file("/" + to_path, from_file)
+		#except:
+		#	print(" x Unable to upload file. ")
 		orphilia_notify(notify,from_path)
 		
 	elif cmd == "unlink":
@@ -670,11 +547,11 @@ def client_new(parameters):
 		from_path = parameters[1]
 		to_path = parameters[2]
 		
-		resp = api_client.metadata(path)
+		resp = api_client.metadata(from_path)
 		modified = resp['modified']
 		date1 = modified[5:]
 		date1 = date_rewrite.generate_modifytime(date1)
-		f = api_client.get_file("/" + path)
+		f = api_client.get_file("/" + from_path)
 		file = open(to_path,"w")
 		try:
 			file.write(f.read())
@@ -682,15 +559,42 @@ def client_new(parameters):
 			print(" x Unable to save file.")
 		file.close()
 		os.system("touch -d \"" + date1 + "\" \"" + to_path + "\"") # this solution won't work on Windows
+		
+	elif cmd == "sync_folder":
+		path = parameters[1]
+		
+		resp = api_client.metadata(path) # gets list of files in directory on Dropbox
+		dirlist = os.listdir(droppath + "/" + path) # gets list of files in directory on local computer
+		rand1 = random.random() # generates random integer
+		
+		queue = Queue.Queue(0)
+	
+		if 'contents' in resp: # begin comparing both lists
+			for f in resp['contents']:
+				name = os.path.basename(f['path'])
+				encoding = locale.getdefaultlocale()[1]
+				if ('%s' % name).encode(encoding) not in dirlist: # found Dropbox file, which isn't present on local computer
+					print ('%s' % name).encode(encoding) + " not found."
+					if not os.path.isfile(('%s' % name).encode(encoding)):
+						dir = f['is_dir']
+						if not dir:
+							tmp = [ 'get', path + "/" + name, droppath + "/" + path + name]
+							queue.put(client_new(tmp))
+						if dir:
+							os.mkdir(droppath + "/" + path +  ('%s' % name).encode(encoding))
+				else: # found Dropbox file which is present on local computer, check this out, bro!
+					name = os.path.basename(f['path'])
+					encoding = locale.getdefaultlocale()[1]
+					print(('%s' % name).encode(encoding) + " found. Checking...")
 
 	print(" > Command '" + parameters[0] + "' executed")
 	
 def client_verbose(parameters):
 	reload(sys).setdefaultencoding('utf8')
-	print('Orphilia')
-	print('Maciej Janiszewski, 2010-2013')
-	print('made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk')
-	print('')
+	print("""Orphilia
+Maciej Janiszewski, 2010-2013')
+made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk')
+\n""")
 	client_new(parameters)
 
 def public(parameters):
