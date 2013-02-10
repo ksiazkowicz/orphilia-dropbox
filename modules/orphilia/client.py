@@ -688,10 +688,10 @@ def client_new(parameters):
 def client_verbose(parameters):
 	reload(sys).setdefaultencoding('utf8')
 	print('Orphilia')
-	print('Maciej Janiszewski, 2010-2013]')
-	print('based on Dropbox SDK from https://www.dropbox.com/developers/reference/sdk')
+	print('Maciej Janiszewski, 2010-2013')
+	print('made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk')
 	print('')
-	orphilia_client(parameters)
+	client_new(parameters)
 
 def public(parameters):
 	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
