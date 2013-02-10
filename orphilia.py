@@ -6,16 +6,21 @@ import sys
 import orphilia
 
 if len(sys.argv) > 1:
-	cmd = dict(sys.argv for arg in sys.argv[3:])
+	print(sys.argv)
+	parameters = sys.argv[2:]
+	print parameters
 	wtd = sys.argv[1]
 else:
 	wtd = "brick"
 
 if wtd == "--client":
-    orphilia.client.client-verbose(cmd)
+    orphilia.client.client_verbose(parameters)
+	
+if wtd == "--client-new":
+    orphilia.client.client_new(parameters)
 
 elif wtd == "--client--silent":
-    orphilia.client.orphilia_client(cmd)
+    orphilia.client.orphilia_client(parameters)
 
 elif wtd == "--install":
     orphilia.installer.install()
@@ -49,13 +54,13 @@ elif wtd == "--configuration":
     orphilia.config.config()
 
 elif wtd == "--configuration-haiku":
-    orphilia.config.config_gui(cmd)
+    orphilia.config.config_gui(parameters)
 
 elif wtd == "--monitor":
     orphilia.monitor.monitor()
 
 elif wtd == "--public":
-    orphilia.client.public(cmd)
+    orphilia.client.public(parameters)
 
 else:
      print("Invalid syntax. Type orphilia --help for more informations")

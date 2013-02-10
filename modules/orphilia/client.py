@@ -11,7 +11,7 @@ import json
 from dropbox import client, rest, session
 from shared import date_rewrite, path_rewrite
 
-# wartosci moralne, a raczej parametry wszelakie
+# Dropbox SDK related parameters
 APP_KEY = 'ij4b7rjc7tsnlj4'
 APP_SECRET = '00evf045y00ml2e'
 ACCESS_TYPE = 'dropbox'
@@ -19,14 +19,18 @@ SDK_VERSION = "1.5"
 
 home = os.path.expanduser('~')
 
+def get_configdir():
+	home = os.path.expanduser('~')
+	if sys.platform[:5] == 'haiku':
+		configurationdir = os.path.normpath(home + '/config/settings/Orphilia/')
+	elif sys.platform[:3] == 'win':
+		configurationdir = os.path.normpath(home + '/AppData/Roaming/Orphilia/')
+	else:
+		configurationdir = os.path.normpath(home + '/.orphilia/')
+	return configurationdir
+
 # set configurationdir path dependent from platform
-if sys.platform[:5] == 'haiku':
-	configurationdir = os.path.normpath(home + '/config/settings/Orphilia/')
-elif sys.platform[:3] == 'win':
-	configurationdir = os.path.normpath(home + '/AppData/Roaming/Orphilia/')
-else:
-	configurationdir = os.path.normpath(home + '/.orphilia/')
-	
+configurationdir = get_configdir()
 STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
 
 def putin(string,filename,method):
@@ -43,7 +47,7 @@ def orphilia_notify(method,string):
 	f.close
 	os.system(notifier + ' ' + method + ' \"'+ string + '\"')
 
-###### DELTA UJEMNA I INNE TRAGEDIE
+###### DELTA PARSING
 ############################
 ############################
 
@@ -164,7 +168,7 @@ def save_state(state):
 ###################################################
 ######################## TU ZACZYNA SIE KLIENT!
 
-def orphilia_client(cmd):
+def orphilia_client(parameters):
 	statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
 	status = statusf.read()
 	statusf.close()
@@ -196,7 +200,7 @@ def orphilia_client(cmd):
 						self.sess.link()
 						print(" > Repeating command...")
 						term = DropboxTerm(APP_KEY, APP_SECRET)
-						term.onecmd(sys.argv[2])
+						term.onecmd(parameters[1])
 	
 			wrapper.__doc__ = f.__doc__
 			return wrapper
@@ -241,7 +245,7 @@ def orphilia_client(cmd):
 				state['cursor'] = cursor
 				state['tree'] = tree
 				save_state(state)
-			print(" > Command '" + sys.argv[2] + "' executed")
+			print(" > Command '" + parameters[1] + "' executed")
 
 		@command()
 		def do_ls(self,path, to_file):
@@ -254,7 +258,7 @@ def orphilia_client(cmd):
 					encoding = locale.getdefaultlocale()[1]
 					file.write(('%s\n' % name).encode(encoding))
 			file.close()
-			print(" > Command '" + sys.argv[2] + "' executed")
+			print(" > Command '" + parameters[1] + "' executed")
 
 		@command()
 		def do_ls_alt(self, path, to_file):
@@ -263,7 +267,7 @@ def orphilia_client(cmd):
 			file = open(to_file,"w")
 			print >> file, a
 			file.close()
-			print(" > Command '" + sys.argv[2] + "' executed")
+			print(" > Command '" + parameters[1] + "' executed")
 
 		@command()
 		def do_sync_everything(self, path):
@@ -284,7 +288,7 @@ def orphilia_client(cmd):
 			os.system("chmod +x " + to_file)
 			os.system("sh " + to_file)
 			os.system("rm " + to_file)
-			print(" > Command '" + sys.argv[2] + "' executed")
+			print(" > Command '" + parameters[1] + "' executed")
 
 		@command()
 		def do_get(self, path, to_path):
@@ -298,7 +302,7 @@ def orphilia_client(cmd):
 			file.close()
 			os.system("touch -d \"" + date1 + "\" \"" + to_path + "\"")
 			
-			print(" > Command '" + sys.argv[2] + "' executed")
+			print(" > Command '" + parameters[1] + "' executed")
 
 		@command()
 		def do_sync_folder(self, path):
@@ -355,7 +359,7 @@ def orphilia_client(cmd):
 					else:
 							print(" x File \"" + ('%s' % name).encode(encoding) + "\" is identical. Skipping.")
 
-				print(" > Command '" + sys.argv[2] + "' executed")
+				print(" > Command '" + parameters[1] + "' executed")
 	
 		@command()
 		def do_logout(self):
@@ -384,13 +388,13 @@ def orphilia_client(cmd):
 			"""move/rename a file or directory"""
 			self.api_client.file_move("/" + from_path,
 									  "/" + to_path)
-			print(" > Command '" + sys.argv[2] + "' executed")
+			print(" > Command '" + parameters[1] + "' executed")
 	
 		@command()
 		def do_account_info(self):
 			f = self.api_client.account_info()
 			pprint.PrettyPrinter(indent=2).pprint(f)
-			print(" > Command '" + sys.argv[2] + "' executed")
+			print(" > Command '" + parameters[1] + "' executed")
 
 		@command()
 		def do_uid(self, parameter2):
@@ -479,23 +483,220 @@ def orphilia_client(cmd):
 	if APP_KEY == '' or APP_SECRET == '':
 		exit('You need to set your APP_KEY and APP_SECRET!')
 	term = DropboxTerm(APP_KEY, APP_SECRET)
-	term.onecmd(sys.argv[2])
+	term.onecmd(parameters)
+	
+# rewritten client, because, why not anyway?
+#
+#
+#
+	
+def client_new(parameters):
+	# a wrapper around DropboxSession that stores a token to a file on disk
+	# (from Dropbox cli_client.py example)
+	class StoredSession(session.DropboxSession):
+		TOKEN_FILE = os.path.normpath(configurationdir + "/token_store.txt")
+
+		def load_creds(self):
+			print(" > Loading access token..."),
+			try:
+				stored_creds = open(self.TOKEN_FILE).read()
+				self.set_token(*stored_creds.split('|'))
+				print(" OK")
+			except IOError:
+				print(" FAILED")
+				print(" x Access token not found. Beggining new session.")
+				self.link()
+
+		def write_creds(self, token):
+			f = open(self.TOKEN_FILE, 'w')
+			f.write("|".join([token.key, token.secret]))
+			f.close()
+
+		def delete_creds(self):
+			os.unlink(self.TOKEN_FILE)
+	
+		def link(self):
+			print(" > Authorizing...")
+			request_token = self.obtain_request_token()
+			url = self.build_authorize_url(request_token)
+			# some code to make this fancy window with URL show up in Haiku OS
+			if sys.platform[:5] == "haiku":
+					putin(url,os.path.normpath(configurationdir+'/authorize-url'),'rewrite')
+					drmchujnia = os.system("orphilia_haiku-authorize")
+					os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
+			else:
+					print("url:", url),
+					raw_input()
+
+			self.obtain_access_token(request_token)
+			self.write_creds(self.token)
+
+			save_state({
+				'access_token': (request_token.key, request_token.secret),
+				'tree': {}
+			})
+
+		def unlink(self):
+			self.delete_creds()
+			session.DropboxSession.unlink(self)
+	
+	# checks if APP_KEY and APP_SECRET are not empty
+	if APP_KEY == '' or APP_SECRET == '':
+		exit(' x You need to set your APP_KEY and APP_SECRET!')
 		
-def client_verbose(cmd):
+	# defines 'sess' and 'api_client' to simplify the code
+	sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
+	api_client = client.DropboxClient(sess)
+	# 
+	sess.load_creds()
+	
+	cmd = parameters[0]
+	
+	if cmd == "ls":
+		path = parameters[1]
+		to_file = parameters[2]
+			
+		resp = api_client.metadata(path)
+		file = open(to_file,"w")
+		
+		if 'contents' in resp:
+			for f in resp['contents']:
+				name = os.path.basename(f['path'])
+				encoding = locale.getdefaultlocale()[1]
+				file.write(('%s\n' % name).encode(encoding))
+		file.close()
+		
+	elif cmd == "delta":
+		state = load_state()
+		cursor = state.get('cursor')
+		tree = state['tree']
+		page = 0
+		changed = False
+		page_limit = 5
+		while (page_limit is None) or (page < page_limit):
+			# Get /delta results from Dropbox
+			result = api_client.delta(cursor)
+			page += 1
+			if result['reset'] == True:
+				sys.stdout.write('reset\n')
+				changed = True
+				tree = {}
+			cursor = result['cursor']
+			# Apply the entries one by one to our cached tree.
+			for delta_entry in result['entries']:
+				changed = True
+				apply_delta(tree, delta_entry)
+				cursor = result['cursor']
+				if not result['has_more']: break
+
+		if not changed:
+			sys.stdout.write('No updates.\n')
+		else:
+		# Save state
+			state['cursor'] = cursor
+			state['tree'] = tree
+			save_state(state)
+			
+	elif cmd == "ls_alt":
+		path = parameters[1]
+		to_file = parameters[2]
+
+		resp = self.api_client.metadata(path)
+		a = unicode(resp)
+		file = open(to_file,"w")
+		print >> file, a
+		file.close()
+		
+	elif cmd == "put":
+		from_path = parameters[1]
+		to_path = parameters[2]
+		notify = parameters[3] # it can be 'add' or 'upd'
+		
+		from_file = open(os.path.expanduser(from_path))
+		#try:
+		api_client.put_file("/" + to_path, from_file)
+		#except:
+		#	print(" x Unable to upload file. ")
+		orphilia_notify(notify,from_path)
+		
+	elif cmd == "unlink":
+			sess.unlink()
+			print(" > Unlinked :C")
+
+	elif cmd == "cat":
+		f = api_client.get_file("/" + path)
+		stdout.write(f.read())
+		stdout.write("\n")
+
+	elif cmd == "mkdir":
+		path = parameters[1]
+		api_client.file_create_folder("/" + path)
+		print(" > Directory \'" + path + "\' created")
+	
+	elif cmd == "rm":
+		path = parameters[1]
+		try:
+			api_client.file_delete("/" + path)
+			orphilia_notify('rm',path)
+		except:
+			print(" x Unable to remove file " + path)
+
+	elif cmd == "mv":
+		from_path = parameters[1]
+		to_path = parameters[2]
+		try:
+			api_client.file_move("/" + from_path, "/" + to_path)
+		except:
+			print(" x Unable to move file " + from_path + " to " + to_path)
+	
+	elif cmd == "account_info":
+		f = api_client.account_info()
+		pprint.PrettyPrinter(indent=2).pprint(f)
+		
+	elif cmd == "uid":
+		param = parameters[1]
+		f = api_client.account_info()
+		uid = str(f['uid'])
+		try:
+			putin(uid,param,'rewrite')
+		except:
+			print(" x Unable to save file.")
+		print(" > UID updated")
+		
+	elif cmd == "get":
+		from_path = parameters[1]
+		to_path = parameters[2]
+		
+		resp = api_client.metadata(path)
+		modified = resp['modified']
+		date1 = modified[5:]
+		date1 = date_rewrite.generate_modifytime(date1)
+		f = api_client.get_file("/" + path)
+		file = open(to_path,"w")
+		try:
+			file.write(f.read())
+		except:
+			print(" x Unable to save file.")
+		file.close()
+		os.system("touch -d \"" + date1 + "\" \"" + to_path + "\"") # this solution won't work on Windows
+
+	print(" > Command '" + parameters[0] + "' executed")
+	
+def client_verbose(parameters):
 	reload(sys).setdefaultencoding('utf8')
 	print('Orphilia')
-	print('Maciej Janiszewski, 2010-2012]')
+	print('Maciej Janiszewski, 2010-2013]')
 	print('based on Dropbox SDK from https://www.dropbox.com/developers/reference/sdk')
 	print('')
-	orphilia_client(cmd)
+	orphilia_client(parameters)
 
-def public():
+def public(parameters):
 	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
 	DROPPATH = read_details.read()
 	read_details.close()
 	read_details2 = open(os.path.normpath(configurationdir+'/dropbox-id'), 'r')
 	DROPID = read_details2.read()
 	read_details2.close()
-	par = sys.argv[2]
+	par = parameters[1]
 	link = 'http://dl.dropbox.com/u/' + DROPID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
 	orphilia_notify('link',link)
