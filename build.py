@@ -64,10 +64,10 @@ def join_files(fromfile,tofile):
 def genorphilia():
 	try:
 		try:
-			join_files(build_path + '/parser/'+ parser,build_path + '/built/orphilia2.py')
+			join_files(build_path + '/modules/parser/'+ parser,build_path + '/built/orphilia2.py')
 		except:
 			print(" [FAILED]")
-			print("Unable to join files " + build_path + '/parser/'+ parser + " and " + build_path + '/built/orphilia2.py')
+			print("Unable to join files " + build_path + '/modules/parser/'+ parser + " and " + build_path + '/built/orphilia2.py')
 			raise
 		else:
 			try:
@@ -127,14 +127,14 @@ def copyfiles():
 		shutil.copy(build_path + '/dependencies/setup.py',build_path + '/built/dependencies')
 
 		#copy notification related files
-		shutil.copy(build_path + '/notify/cli-notify',build_path + '/built/notify')
-		shutil.copy(build_path + '/notify/haiku-notify',build_path + '/built/notify')
-		shutil.copy(build_path + '/notify/orphilia.png',build_path + '/built/notify')
+		shutil.copy(build_path + '/modules/notify/cli-notify',build_path + '/built/notify')
+		shutil.copy(build_path + '/modules/notify/haiku-notify',build_path + '/built/notify')
+		shutil.copy(build_path + '/modules/notify/orphilia.png',build_path + '/built/notify')
 
 		#copy branding related files
-		shutil.copy(build_path + '/branding/orphilia.png',build_path + '/built/branding')
-		shutil.copy(build_path + '/branding/orphilia_haiku.png',build_path + '/built/branding')
-		shutil.copy(build_path + '/branding/orphilia_new.png',build_path + '/built/branding')
+		shutil.copy(build_path + '/modules/branding/orphilia.png',build_path + '/built/branding')
+		shutil.copy(build_path + '/modules/branding/orphilia_haiku.png',build_path + '/built/branding')
+		shutil.copy(build_path + '/modules/branding/orphilia_new.png',build_path + '/built/branding')
 
 		#copy cert, readme etc.
 		shutil.copy(build_path + '/README',build_path + '/built')
@@ -157,12 +157,12 @@ def buildorphilia():
 	if platform[:5] == "haiku":
 		print("Copying platform-specific files..."),
 		try:
-			shutil.copy(build_path + '/haiku-gui/authorize.yab',build_path + '/built')
-			shutil.copy(build_path + '/haiku-gui/configuration.yab',build_path + '/built')
-			shutil.copy(build_path + '/haiku-gui/install_haiku.sh',build_path + '/built')
-			shutil.copy(build_path + '/haiku-gui/yab',build_path + '/built')
+			shutil.copy(build_path + '/modules/haiku-gui/authorize.yab',build_path + '/built')
+			shutil.copy(build_path + '/modules/haiku-gui/configuration.yab',build_path + '/built')
+			shutil.copy(build_path + '/modules/haiku-gui/install_haiku.sh',build_path + '/built')
+			shutil.copy(build_path + '/modules/haiku-gui/yab',build_path + '/built')
 
-			shutil.copy(build_path + '/haiku-gui/img/step.png',build_path + '/built/img')
+			shutil.copy(build_path + '/modules/haiku-gui/img/step.png',build_path + '/built/img')
 			
 			make_executable(build_path + '/built/yab')
 			make_executable(build_path + '/built/install_haiku.sh')
@@ -176,13 +176,42 @@ def buildorphilia():
 	if platform[:5] == "win32":
 		print("Copying platform-specific files..."),
 		try:
-			shutil.copy(build_path + '/windows-workaround/orphilia.bat',build_path + '/built')
+			shutil.copy(build_path + '/modules/windows-workaround/orphilia.bat',build_path + '/built')
 			
 		except:
 			print(" [FAILED]")
 			print("Check if you have read/write permissions to this catalog.")
 			sys.exit(1)
 		print(" [OK]")
+		
+def warn():
+	print(" "+platform+" [WARNING]")
+	print("Please bear in mind, that this platform is not supported in this revision")
+		
+def checkforced():
+	try:
+		sys.argv[1]
+	except:
+		print(" "+platform+" [FAILED]")
+	else:
+		if sys.argv[1] == "--force":
+			warn()
+			parser = 'haiku-parser.py'
+			buildorphilia()
+		else:
+			try:
+				sys.argv[2]
+			except:
+				print(" "+platform+" [FAILED]")
+				print("Argument invalid. Try \"--force\"")
+			else:
+				if sys.argv[2] == "--force":
+					warn()
+					parser = 'haiku-parser.py'
+					buildorphilia()
+				else:
+					print(" "+platform+" [FAILED]")
+					print("Argument invalid. Try \"--force\"")
 
 print("Parsing build scripts")
 print("Identifying platform..."),
@@ -192,22 +221,6 @@ if platform[:5] == "haiku":
 	parser = 'haiku-parser.py'
 	buildorphilia()
 	
-if platform[:5] == "win32":
-	try:
-		sys.argv[1]
-	except:
-		print(" win32 [FAILED]")
-	else:
-		if sys.argv[1] == "--force":
-			parser = 'haiku-parser.py'
-			buildorphilia()
-		elif sys.argv[2] == "--force":
-			parser = 'haiku-parser.py'
-			buildorphilia()
-		else:
-			print(" win32 [FAILED]")
-			print("Argument invalid. Try \"--force\"")
-
 elif platform[:5] == "linux":
 	print(" Linux [OK]")
 	buildorphilia()
@@ -216,5 +229,4 @@ elif platform[:7] == "freebsd":
 	print(" FreeBSD [OK]")
 	buildorphilia()
 else:
-	print(" [FAILED]")
-	print("Platform " + platform + " is currently unsupported.")
+	checkforced()
