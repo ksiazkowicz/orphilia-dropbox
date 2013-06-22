@@ -14,10 +14,10 @@ if wtd == "--client":
     orphilia.client.client_verbose(parameters)
 	
 if wtd == "--client-old":
-    orphilia.client.client_new(parameters)
+    orphilia.client.client(parameters)
 
 elif wtd == "--client--silent":
-    orphilia.client.orphilia_new(parameters)
+    orphilia.client.client_new(parameters)
 
 elif wtd == "--install":
     orphilia.installer.install()

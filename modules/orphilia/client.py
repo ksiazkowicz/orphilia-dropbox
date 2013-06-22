@@ -23,21 +23,16 @@ def get_configdir():
 		configurationdir = os.path.normpath(home + '/.orphilia/')
 	return configurationdir
 
-# Dropbox SDK related parameters
+# set configurationdir path dependent from platform
+configurationdir = get_configdir()
+
+# Dropbox API related parameters
 APP_KEY = 'ij4b7rjc7tsnlj4'
 APP_SECRET = '00evf045y00ml2e'
 ACCESS_TYPE = 'dropbox'
 SDK_VERSION = "1.5"
 delta_switch = 0
 
-home = os.path.expanduser('~')
-
-# set configurationdir path dependent from platform
-configurationdir = get_configdir()
-
-read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-droppath = read_details.read()
-read_details.close()
 STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
 
 # initialize Dropbox session
@@ -78,7 +73,7 @@ class StoredSession(session.DropboxSession):
 			drmchujnia = os.system("orphilia_haiku-authorize")
 			os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
 		else:
-			print("url:", url),
+			print("url:"+ url),
 			raw_input()
 
 		self.obtain_access_token(request_token)
@@ -92,13 +87,7 @@ class StoredSession(session.DropboxSession):
 	def unlink(self):
 		self.delete_creds()
 		session.DropboxSession.unlink(self)
-if APP_KEY == '' or APP_SECRET == '':
-	exit(' x You need to set your APP_KEY and APP_SECRET!')
-	
-# defines 'sess' and 'api_client' to simplify the code
-sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
-api_client = client.DropboxClient(sess)
-sess.load_creds()
+
 
 ##################### some internal procedures #
 def putin(string,filename,method):
@@ -450,6 +439,25 @@ def orphilia_client(parameters):
 #
 	
 def client_new(parameters):
+	# get dropbox path and stuff
+	try:
+		open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
+	except:
+		print('If I were you, I\'d run orphilia --configuration')
+	else:
+		read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
+		droppath = read_details.read()
+		read_details.close()
+	
+	# check if I specified app_key and app_secret	
+	if APP_KEY == '' or APP_SECRET == '':
+		exit(' x You need to set your APP_KEY and APP_SECRET!')
+	
+	# defines 'sess' and 'api_client' to simplify the code
+	sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
+	api_client = client.DropboxClient(sess)
+	sess.load_creds()
+	
 	cmd = parameters[0]
 	
 	if cmd == "ls":
