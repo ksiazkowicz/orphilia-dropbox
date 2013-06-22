@@ -7,5 +7,5 @@ setup(name='orphilia-dependencies',
       description='Modules required to run Orphilia',
       author='Maciej Janiszewski',
       author_email='pisarzk@gmail.com',
-      install_requires = ['oauth', 'simplejson', 'watchdog', 'pkg_resources'],
+      install_requires = ['oauth', 'simplejson', 'watchdog'],
      )
