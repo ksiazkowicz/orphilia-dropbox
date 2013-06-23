@@ -11,12 +11,6 @@ else:
 	wtd = "brick"
 
 if wtd == "--client":
-    orphilia.client.client_verbose(parameters)
-	
-if wtd == "--client-old":
-    orphilia.client.client(parameters)
-
-elif wtd == "--client--silent":
     orphilia.client.client_new(parameters)
 
 elif wtd == "--install":
@@ -26,10 +20,7 @@ elif wtd == "--uninstall":
     orphilia.installer.uninstall()
 
 elif wtd == "--help":
-	print("""Orphilia
-Maciej Janiszewski, 2010-2013
-made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk
-
+	print("""
 Syntax: orphilia [OPTION] [PARAMETERS]
 	
  --help          - displays this text

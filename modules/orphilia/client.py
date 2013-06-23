@@ -35,6 +35,20 @@ delta_switch = 0
 
 STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
 
+# get dropbox path and stuff
+try:
+	open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
+except:
+	print('If I were you, I\'d run orphilia --configuration')
+else:
+	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
+	droppath = read_details.read()
+	read_details.close()
+	
+# check if I specified app_key and app_secret	
+if APP_KEY == '' or APP_SECRET == '':
+	exit(' x You need to set your APP_KEY and APP_SECRET!')
+
 # initialize Dropbox session
 ##################################
 #########################
@@ -87,7 +101,6 @@ class StoredSession(session.DropboxSession):
 	def unlink(self):
 		self.delete_creds()
 		session.DropboxSession.unlink(self)
-
 
 ##################### some internal procedures #
 def putin(string,filename,method):
@@ -243,7 +256,17 @@ def save_state(state):
 
 #####################################################
 ###################################################
-######################## TU ZACZYNA SIE KLIENT!
+######################## Client-related code
+
+print("""Orphilia
+Maciej Janiszewski, 2010-2013
+made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk
+\n > Attempting authorization...""")
+
+# defines 'sess' and 'api_client' to simplify the code
+sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
+api_client = client.DropboxClient(sess)
+sess.load_creds()
 
 def orphilia_client(parameters):
 	statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
@@ -439,25 +462,6 @@ def orphilia_client(parameters):
 #
 	
 def client_new(parameters):
-	# get dropbox path and stuff
-	try:
-		open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-	except:
-		print('If I were you, I\'d run orphilia --configuration')
-	else:
-		read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-		droppath = read_details.read()
-		read_details.close()
-	
-	# check if I specified app_key and app_secret	
-	if APP_KEY == '' or APP_SECRET == '':
-		exit(' x You need to set your APP_KEY and APP_SECRET!')
-	
-	# defines 'sess' and 'api_client' to simplify the code
-	sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
-	api_client = client.DropboxClient(sess)
-	sess.load_creds()
-	
 	cmd = parameters[0]
 	
 	if cmd == "ls":
@@ -616,14 +620,6 @@ def client_new(parameters):
 
 	print(" > Command '" + parameters[0] + "' executed")
 	
-def client_verbose(parameters):
-	reload(sys).setdefaultencoding('utf8')
-	print("""Orphilia
-Maciej Janiszewski, 2010-2013')
-made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk')
-\n""")
-	client_new(parameters)
-
 def public(parameters):
 	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
 	DROPPATH = read_details.read()
@@ -632,5 +628,5 @@ def public(parameters):
 	DROPID = read_details2.read()
 	read_details2.close()
 	par = parameters[1]
-	link = 'http://dl.dropbox.com/u/' + DROPID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
+	link = 'https://dl.dropboxusercontent.com/u/' + DROPID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
 	orphilia_notify('link',link)
