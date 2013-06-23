@@ -1,62 +1,102 @@
-import sys
-import os
-import random
-
-import cmd
-import locale
-import pprint
-import shlex
-import json
-
-import Queue
-
-from dropbox import client, rest, session
+import sys, os, random, cmd, locale, pprint, shlex, json, Queue
 from shared import date_rewrite, path_rewrite
 
-def get_configdir():
-	home = os.path.expanduser('~')
-	if sys.platform[:5] == 'haiku':
-		configurationdir = os.path.normpath(home + '/config/settings/Orphilia/')
-	elif sys.platform[:3] == 'win':
-		configurationdir = os.path.normpath(home + '/AppData/Roaming/Orphilia/')
-	else:
-		configurationdir = os.path.normpath(home + '/.orphilia/')
-	return configurationdir
+print("""Orphilia
+Maciej Janiszewski, 2010-2013
+made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk \n""")
 
-# set configurationdir path dependent from platform
-configurationdir = get_configdir()
-
-# Dropbox API related parameters
+####################### initialize Dropbox API #
+################################################
+###############################################
+from dropbox import client, rest, session
 APP_KEY = 'ij4b7rjc7tsnlj4'
 APP_SECRET = '00evf045y00ml2e'
 ACCESS_TYPE = 'dropbox'
 SDK_VERSION = "1.5"
-delta_switch = 0
 
-STATE_FILE = os.path.normpath(configurationdir + '/search_cache.json')
-
-# get dropbox path and stuff
-try:
-	open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-except:
-	print('If I were you, I\'d run orphilia --configuration')
-else:
-	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-	droppath = read_details.read()
-	read_details.close()
-	
 # check if I specified app_key and app_secret	
 if APP_KEY == '' or APP_SECRET == '':
 	exit(' x You need to set your APP_KEY and APP_SECRET!')
 
-# initialize Dropbox session
-##################################
-#########################
-###########
+############### read settings, get things done #
+################################################
+###############################################
+def getConfigurationDirectory():
+	home = os.path.expanduser('~')
+	if sys.platform[:5] == 'haiku':
+		configurationDirectory = os.path.normpath(home + '/config/settings/Orphilia/')
+	elif sys.platform[:3] == 'win':
+		configurationDirectory = os.path.normpath(home + '/AppData/Roaming/Orphilia/')
+	else:
+		configurationDirectory = os.path.normpath(home + '/.orphilia/')
+	return configurationDirectory
+
+configurationDirectory = getConfigurationDirectory()
+
+def getDropboxPath():
+	try:
+		open(os.path.normpath(configurationDirectory+'/dropbox-path'), 'r')
+	except:
+		print(' ! Dropbox folder path not specified. Run configuration utility')
+		dropboxPath = os.path.normpath(os.path.expanduser('~') + '/Dropbox')
+	else:
+		dropboxPathSetting = open(os.path.normpath(configurationDirectory+'/dropbox-path'), 'r')
+		dropboxPath = dropboxPathSetting.read()
+		dropboxPathSetting.close()
+	return dropboxPath
+
+def getAccountUID():
+	try:
+		open(os.path.normpath(configurationDirectory+'/dropbox-id'), 'r')
+	except:
+		print(' ! Account UID unknown. Public links may work unproperly. Run configuration utility')
+		dropboxUID = 0
+	else:
+		dropboxUIDSetting = open(os.path.normpath(configurationDirectory+'/dropbox-id'), 'r')
+		dropboxUID = dropboxUIDSetting.read()
+		dropboxUIDSetting.close()
+	return dropboxUID
+
+def getNotifier():
+	try:
+		open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
+	except:
+		print(' ! Notifier not specified. Run configuration utility')
+		notifier = ''
+	else:
+		notifierSetting = open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
+		notifier = notifierSetting.read()
+		notifierSetting.close()
+	return notifier
+
+dropboxPath = getDropboxPath()
+accountUID = getAccountUID()
+notifier = getNotifier()
+
+delta_switch = 0
+STATE_FILE = os.path.normpath(configurationDirectory + '/search_cache.json')
+
+##################### some internal procedures #
+################################################
+###############################################
+def putIn(string,filename,method):
+	if method == "append":
+		putInFile = open(filename,"a")
+	else:
+		putInFile = open(filename,"w")
+	putInFile.write(string)
+	putInFile.close
+	
+def orphiliaNotify(method,string):
+	os.system(notifier + ' ' + method + ' \"'+ string + '\"')
+
+################### initialize Dropbox session #
+################################################
+###############################################
 # a wrapper around DropboxSession that stores a token to a file on disk
 # (from Dropbox cli_client.py example)
 class StoredSession(session.DropboxSession):
-	TOKEN_FILE = os.path.normpath(configurationdir + "/token_store.txt")
+	TOKEN_FILE = os.path.normpath(configurationDirectory + "/token_store.txt")
 
 	def load_creds(self):
 		print(" > Loading access token..."),
@@ -83,9 +123,9 @@ class StoredSession(session.DropboxSession):
 		url = self.build_authorize_url(request_token)
 		# some code to make this fancy window with URL show up in Haiku OS
 		if sys.platform[:5] == "haiku":
-			putin(url,os.path.normpath(configurationdir+'/authorize-url'),'rewrite')
+			putin(url,os.path.normpath(configurationDirectory+'/authorize-url'),'rewrite')
 			drmchujnia = os.system("orphilia_haiku-authorize")
-			os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
+			os.system('rm ' + os.path.normpath(configurationDirectory+'/authorize-url'))
 		else:
 			print("url:"+ url),
 			raw_input()
@@ -102,27 +142,10 @@ class StoredSession(session.DropboxSession):
 		self.delete_creds()
 		session.DropboxSession.unlink(self)
 
-##################### some internal procedures #
-def putin(string,filename,method):
-	if method == "append":
-		putinfile = open(filename,"a")
-	else:
-		putinfile = open(filename,"w")
-	putinfile.write(string)
-	putinfile.close
-	
-def orphilia_notify(method,string):
-	f = open(os.path.normpath(configurationdir + '/notify-settings'), 'r')
-	notifier = f.read()
-	f.close
-	os.system(notifier + ' ' + method + ' \"'+ string + '\"')
-
-###### DELTA PARSING
-############################
-############################
-
+################### delta parsing related code #
+################################################
+###############################################
 # We track the folder state as a tree of Node objects.
-
 class Node(object):
 	def __init__(self, path, content):
 		# The "original" path (i.e. not the lower-case path)
@@ -177,12 +200,12 @@ def apply_delta(root, e):
 				node.content = {}
 			if delta_switch == 0:
 				try:
-					os.mkdir(droppath + "/" + path)
+					os.mkdir(dropboxPath + "/" + path)
 				except:
 					pass
 		else:
 			node.content = metadata['size'], metadata['modified']
-			tmp = [ 'get', path, droppath + "/" + path]
+			tmp = [ 'get', path, dropboxPath + "/" + path]
 			if delta_switch == 0:
 				try:
 					chleb.put(client_new(tmp))
@@ -192,7 +215,7 @@ def apply_delta(root, e):
 		print(' - ' + path)
 		if delta_switch == 0:
 			try:
-				chleb.put(os.remove(droppath + '/' + path))
+				chleb.put(os.remove(dropboxPath + '/' + path))
 			except:
 				print(' x Something went wrong')
 	
@@ -203,7 +226,7 @@ def apply_delta(root, e):
 			node = children.get(part)
 			# If one of the parent folders is missing, then we're done.
 			if node is None or not node.is_folder(): 
-				chleb.put(os.rmtree(droppath+path)) 
+				chleb.put(os.rmtree(dropboxPath+path)) 
 				break
 			children = node.content
 		else:
@@ -258,210 +281,14 @@ def save_state(state):
 ###################################################
 ######################## Client-related code
 
-print("""Orphilia
-Maciej Janiszewski, 2010-2013
-made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk
-\n > Attempting authorization...""")
+print(' > Attempting authorization...')
 
-# defines 'sess' and 'api_client' to simplify the code
+# defines 'sess' and 'api_client' to simplify the code, also begins auth process
 sess = StoredSession(APP_KEY, APP_SECRET, access_type=ACCESS_TYPE)
 api_client = client.DropboxClient(sess)
 sess.load_creds()
 
-def orphilia_client(parameters):
-	statusf = open(os.path.normpath(configurationdir+'/net-status'), 'r')
-	status = statusf.read()
-	statusf.close()
-	if status == "1":
-		exit()
-
-	def command(login_required=True):
-		def decorate(f):
-			def wrapper(self, args):
-				if login_required and not self.sess.is_linked():
-					self.stdout.write("Please 'login' to execute this command\n")
-					return
-	
-				try:
-					return f(self, *args)
-				except TypeError as e:
-					self.stdout.write(str(e) + '\n')
-				except rest.ErrorResponse as e:
-					msg = e.user_error_msg or str(e)
-					self.stdout.write('Error: %s\n' % msg)
-					msg2 = msg[:5]
-					if msg2 == "[401]":
-						print(" > Token problem. Unlinking..."),
-						self.sess.unlink()
-						print(" OK")
-						self.sess.link()
-						print(" > Repeating command...")
-						term = DropboxTerm(APP_KEY, APP_SECRET)
-						term.onecmd(parameters[1])
-	
-			wrapper.__doc__ = f.__doc__
-			return wrapper
-		return decorate
-
-	class DropboxTerm(cmd.Cmd):
-		def __init__(self, app_key, app_secret):
-			cmd.Cmd.__init__(self)
-			self.sess = StoredSession(app_key, app_secret, access_type=ACCESS_TYPE)
-			self.api_client = client.DropboxClient(self.sess)
-	
-			self.sess.load_creds()
-
-		@command()
-		def do_sync_everything(self, path):
-			term = DropboxTerm(APP_KEY, APP_SECRET)
-			resp = self.api_client.metadata(path)
-			rand1 = random.random()
-			dirlist = os.listdir(droppath + "/" + path)
-			to_file = os.path.normpath(configurationdir + "_tmpscript" + str(rand1) + ".tmp")
-			file = open(to_file,"w")
-			file.write('orphilia --client--silent \"sync_folder \\"' + path + "/" + '\\"\"' + '\n')
-
-			for fname in dirlist:
-					if os.path.isdir(droppath + "/" + path + fname):
-						file.write('cd \"' + fname + '\"'+ '\n')
-						file.write('orphilia --client--silent \"sync_everything \\"' + path + "/" + fname + '\\"\"' + '\n')
-						file.write('cd ..'+ '\n')
-			file.close()
-			os.system("chmod +x " + to_file)
-			os.system("sh " + to_file)
-			os.system("rm " + to_file)
-			print(" > Command '" + parameters[1] + "' executed")
-
-		@command()
-		def do_sync_folder(self, path):
-			term = DropboxTerm(APP_KEY, APP_SECRET)
-			""""""
-			resp = self.api_client.metadata(path)
-			dirlist = os.listdir(droppath + "/" + path)
-			rand1 = random.random()
-
-			if 'contents' in resp:
-				for f in resp['contents']:
-					name = os.path.basename(f['path'])
-					encoding = locale.getdefaultlocale()[1]
-					if ('%s' % name).encode(encoding) not in dirlist:
-						print ('%s' % name).encode(encoding) + " not found."
-						if not os.path.isfile(('%s' % name).encode(encoding)):
-							dir = f['is_dir']
-							if not dir:
-								term.onecmd('get \"' + path + "/" + ('%s' % name).encode(encoding) + '\" \"' +  droppath + "/" + path +  ('%s' % name).encode(encoding) + '\"')
-							if dir:
-								os.system('mkdir \"' + droppath + "/" + path +  ('%s' % name).encode(encoding) + '\"')
-					else:
-						name = os.path.basename(f['path'])
-						encoding = locale.getdefaultlocale()[1]
-						print ('%s' % name).encode(encoding) + " found. Checking..."
-
-						modified = f['modified']
-						date1 = modified[5:]
-					if os.path.isfile(('%s' % name).encode(encoding)):
-						t = time.ctime(os.path.getmtime(('%s' % name).encode(encoding)))
-						date2 = t[4:]
-
-						hour = str(int(hour) +1)
-
-						timestamp1_rnd = date_rewrite.generate_timestampd(date1)
-						print(date1 + " converted to " + timestamp1_rnd)
-						timestamp2_rnd = date_rewrite.generate_timestamp(date2)
-						print(date2 + " converted to " + timestamp2_rnd)
-						
-						dir = f['is_dir']
-
-						if timestamp1_rnd < timestamp2_rnd:
-							if not dir:
-								print(" - Dropbox version of file \"" + ('%s' % name).encode(encoding) + "\" is older. Updating...")
-								term.onecmd('rm \"' +  path + "/" + ('%s' % name).encode(encoding) + '\"')
-								term.onecmd('sync \"' + ('%s' % name).encode(encoding) + '\" \"' +  path + "/" + ('%s' % name).encode(encoding) + '\"')
-							else:
-								print + " x " + name + " is directory. Skipping."
-
-					elif timestamp1_rnd > timestamp2_rnd:
-						term.onecmd('get \"' + path + "/" + ('%s' % name).encode(encoding) + '\" \"' +  ('%s' % name).encode(encoding) + '\"')
-						print(" - Dropbox verion of file \"" + ('%s' % name).encode(encoding) + "\" is newer. Updating.")
-
-					else:
-							print(" x File \"" + ('%s' % name).encode(encoding) + "\" is identical. Skipping.")
-
-				print(" > Command '" + parameters[1] + "' executed")
-	
-		# the following are for command line magic and aren't Dropbox-related
-		def emptyline(self):
-			pass
-
-		def do_EOF(self, line):
-			self.stdout.write('\n')
-			return True
-
-		def parseline(self, line):
-			parts = shlex.split(line)
-			if len(parts) == 0:
-				return None, None, line
-			else:
-				return parts[0], parts[1:], line
-
-
-	class StoredSession(session.DropboxSession):
-		TOKEN_FILE = os.path.normpath(configurationdir + "/token_store.txt")
-
-		def load_creds(self):
-			print(" > Loading access token..."),
-			try:
-				stored_creds = open(self.TOKEN_FILE).read()
-				self.set_token(*stored_creds.split('|'))
-				print(" OK")
-			except IOError:
-				print(" FAILED")
-				print(" x Access token not found. Beggining new session.")
-				self.link()
-
-		def write_creds(self, token):
-			f = open(self.TOKEN_FILE, 'w')
-			f.write("|".join([token.key, token.secret]))
-			f.close()
-
-		def delete_creds(self):
-			os.unlink(self.TOKEN_FILE)
-	
-		def link(self):
-			print(" > Authorizing...")
-			request_token = self.obtain_request_token()
-			url = self.build_authorize_url(request_token)
-			if sys.platform[:5] == "haiku":
-					putin(url,os.path.normpath(configurationdir+'/authorize-url'),'rewrite')
-					drmchujnia = os.system("orphilia_haiku-authorize")
-					os.system('rm ' + os.path.normpath(configurationdir+'/authorize-url'))
-			else:
-					print("url:", url),
-					raw_input()
-
-			self.obtain_access_token(request_token)
-			self.write_creds(self.token)
-
-			save_state({
-				'access_token': (request_token.key, request_token.secret),
-				'tree': {}
-			})
-
-		def unlink(self):
-			self.delete_creds()
-			session.DropboxSession.unlink(self)
-
-	if APP_KEY == '' or APP_SECRET == '':
-		exit('You need to set your APP_KEY and APP_SECRET!')
-	term = DropboxTerm(APP_KEY, APP_SECRET)
-	term.onecmd(parameters)
-	
-# rewritten client, because, why not anyway?
-#
-#
-#
-	
-def client_new(parameters):
+def client(parameters):
 	cmd = parameters[0]
 	
 	if cmd == "ls":
@@ -525,7 +352,7 @@ def client_new(parameters):
 		api_client.put_file("/" + to_path, from_file)
 		#except:
 		#	print(" x Unable to upload file. ")
-		orphilia_notify(notify,from_path)
+		orphiliaNotify(notify,from_path)
 		
 	elif cmd == "unlink":
 			sess.unlink()
@@ -548,7 +375,7 @@ def client_new(parameters):
 		path = path_rewrite.rewritepath('posix',parameters[1])
 		try:
 			api_client.file_delete("/" + path)
-			orphilia_notify('rm',path)
+			orphiliaNotify('rm',path)
 		except:
 			print(" x Unable to remove file " + path)
 
@@ -595,7 +422,7 @@ def client_new(parameters):
 		path = parameters[1]
 		
 		resp = api_client.metadata(path) # gets list of files in directory on Dropbox
-		dirlist = os.listdir(droppath + "/" + path) # gets list of files in directory on local computer
+		dirlist = os.listdir(dropboxPath + "/" + path) # gets list of files in directory on local computer
 		rand1 = random.random() # generates random integer
 		
 		queue = Queue.Queue(0)
@@ -609,10 +436,10 @@ def client_new(parameters):
 					if not os.path.isfile(('%s' % name).encode(encoding)):
 						dir = f['is_dir']
 						if not dir:
-							tmp = [ 'get', path + "/" + name, droppath + "/" + path + name]
+							tmp = [ 'get', path + "/" + name, dropboxPath + "/" + path + name]
 							queue.put(client_new(tmp))
 						if dir:
-							os.mkdir(droppath + "/" + path +  ('%s' % name).encode(encoding))
+							os.mkdir(dropboxPath + "/" + path +  ('%s' % name).encode(encoding))
 				else: # found Dropbox file which is present on local computer, check this out, bro!
 					name = os.path.basename(f['path'])
 					encoding = locale.getdefaultlocale()[1]
@@ -620,13 +447,7 @@ def client_new(parameters):
 
 	print(" > Command '" + parameters[0] + "' executed")
 	
-def public(parameters):
-	read_details = open(os.path.normpath(configurationdir+'/dropbox-path'), 'r')
-	DROPPATH = read_details.read()
-	read_details.close()
-	read_details2 = open(os.path.normpath(configurationdir+'/dropbox-id'), 'r')
-	DROPID = read_details2.read()
-	read_details2.close()
+def getPublicLink(parameters):
 	par = parameters[1]
-	link = 'https://dl.dropboxusercontent.com/u/' + DROPID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(DROPPATH + "/Public"))+1:])
-	orphilia_notify('link',link)
+	link = 'https://dl.dropboxusercontent.com/u/' + accountUID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(dropboxPath + "/Public"))+1:])
+	orphiliaNotify('link',link)

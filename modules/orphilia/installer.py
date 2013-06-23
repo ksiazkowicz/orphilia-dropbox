@@ -1,6 +1,4 @@
-import sys
-import os
-import shutil
+import sys, os, shutil
 
 def install():
 	print('Orphilia Installer')

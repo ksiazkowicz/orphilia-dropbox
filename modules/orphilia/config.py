@@ -5,30 +5,30 @@ import orphilia
 
 home = os.path.expanduser('~')
 
-# set configurationdir path dependent from platform
-configurationdir = orphilia.client.get_configdir()
+# set configurationDirectory path dependent from platform
+configurationDirectory = orphilia.client.getConfigurationDirectory()
 
-def putin(string,filename,method):
+def putIn(string,filename,method):
 	if method == "append":
-		putinfile = open(filename,"a")
+		putInFile = open(filename,"a")
 	else:
-		putinfile = open(filename,"w")
-	putinfile.write(string)
-	putinfile.close
+		putInFile = open(filename,"w")
+	putInFile.write(string)
+	putInFile.close
 
 def config():
-	if os.path.isdir(configurationdir):
-		shutil.rmtree(configurationdir)
-	os.makedirs(configurationdir)
-	putin('0',os.path.normpath(configurationdir+'/net-status'),'rewrite')
+	if os.path.isdir(configurationDirectory):
+		shutil.rmtree(configurationDirectory)
+	os.makedirs(configurationDirectory)
+	putin('0',os.path.normpath(configurationDirectory+'/net-status'),'rewrite')
 	print("Welcome to Orphilia, an open-source crossplatform Dropbox client.\nIn few steps, you will configure your Dropbox account to be used with Orphilia.")
 	
 	if sys.platform[:5] == "haiku":
-		putin('orphilia_haiku-notify',os.path.normpath(configurationdir+'/notify-settings'),'rewrite')
+		putin('orphilia_haiku-notify',os.path.normpath(configurationDirectory+'/notify-settings'),'rewrite')
 
 	else:
 		notifier = raw_input("Enter notify method: ")
-		putin(notifier,os.path.normpath(configurationdir+'/notify-settings'),'rewrite')
+		putin(notifier,os.path.normpath(configurationDirectory+'/notify-settings'),'rewrite')
 
 	droppath = raw_input("Dropbox folder location (optional):")
 	
@@ -37,22 +37,22 @@ def config():
 	else:
 		pass
 		
-	putin(droppath,os.path.normpath(configurationdir+'/dropbox-path'),'rewrite')
+	putin(droppath,os.path.normpath(configurationDirectory+'/dropbox-path'),'rewrite')
 	if not os.path.exists(droppath):
  		os.makedirs(droppath)
 
 	print("Please wait. Orphilia is making configuration files.")
-	os.system('orphilia --client--silent \"uid \''+os.path.normpath(configurationdir+'/dropbox-id') + '\'\"')
+	os.system('orphilia --client--silent \"uid \''+os.path.normpath(configurationDirectory+'/dropbox-id') + '\'\"')
 
 	print("Configuration files has been created.")
 
 def config_gui():
-	if os.path.isdir(configurationdir):
-		shutil.rmtree(configurationdir)
-	os.makedirs(configurationdir)
-	putin('0',os.path.normpath(configurationdir+'/net-status'),'rewrite')
+	if os.path.isdir(configurationDirectory):
+		shutil.rmtree(configurationDirectory)
+	os.makedirs(configurationDirectory)
+	putin('0',os.path.normpath(configurationDirectory+'/net-status'),'rewrite')
 	
-	putin('orphilia_haiku-notify',os.path.normpath(configurationdir+'/notify-settings'),'rewrite')
+	putin('orphilia_haiku-notify',os.path.normpath(configurationDirectory+'/notify-settings'),'rewrite')
 
 	droppath = sys.argv[2]
 	
@@ -61,8 +61,8 @@ def config_gui():
 	else:
 		pass
 		
-	putin(droppath,os.path.normpath(configurationdir+'/dropbox-path'),'rewrite')
+	putin(droppath,os.path.normpath(configurationDirectory+'/dropbox-path'),'rewrite')
 	if not os.path.exists(droppath):
  		os.makedirs(droppath)
 
-	os.system('orphilia --client--silent \"uid \''+os.path.normpath(configurationdir+'/dropbox-id') + '\'\"')
+	os.system('orphilia --client--silent \"uid \''+os.path.normpath(configurationDirectory+'/dropbox-id') + '\'\"')

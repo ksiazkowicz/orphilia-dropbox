@@ -11,7 +11,7 @@ else:
 	wtd = "brick"
 
 if wtd == "--client":
-    orphilia.client.client_new(parameters)
+    orphilia.client.client(parameters)
 
 elif wtd == "--install":
     orphilia.installer.install()
