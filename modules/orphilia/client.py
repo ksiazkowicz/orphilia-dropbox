@@ -49,7 +49,7 @@ def getAccountUID():
 	try:
 		open(os.path.normpath(configurationDirectory+'/dropbox-id'), 'r')
 	except:
-		print(' ! Account UID unknown. Public links may work unproperly. Run configuration utility')
+		print(' ! Account UID unknown. Public links won\'t work. Run configuration utility')
 		dropboxUID = 0
 	else:
 		dropboxUIDSetting = open(os.path.normpath(configurationDirectory+'/dropbox-id'), 'r')
