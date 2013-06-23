@@ -88,7 +88,8 @@ def putIn(string,filename,method):
 	putInFile.close
 	
 def orphiliaNotify(method,string):
-	os.system(notifier + ' ' + method + ' \"'+ string + '\"')
+	if notifier != '':
+		os.system(notifier + ' ' + method + ' \"'+ string + '\"')
 
 ################### initialize Dropbox session #
 ################################################
