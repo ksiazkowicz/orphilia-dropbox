@@ -113,11 +113,11 @@ def monitor():
 	try:
 	  while True:
 		time.sleep(1)
-		statusf = open(os.path.normpath(configurationDirectory+'/net-status'), 'r')
-		status = statusf.read()
-		statusf.close()
-		if status == "1":
-		   exit()
+		#statusf = open(os.path.normpath(configurationDirectory+'/net-status'), 'r')
+		#status = statusf.read()
+		#statusf.close()
+		#if status == "1":
+		#   exit()
 	  while not q.empty():
 		print q.get()
 	except KeyboardInterrupt:
