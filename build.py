@@ -1,8 +1,6 @@
 # Orphilia build script
 #
-import os
-import sys
-import shutil
+import os, sys, shutil
 
 build_path = os.getcwd()
 parser = 'generic-parser.py'
@@ -45,7 +43,10 @@ def gentree():
 	print(" [OK]")
 	
 def make_executable(path):
-	if sys.platform[:5] != "win32":
+	if sys.platform[:5] == "haiku":
+		os.system('chmod +x '+path)
+		
+	elif sys.platform[:5] != "win32":
 		perm = os.stat(path)
 		os.chmod(path, perm.st_mode | stat.S_IEXEC)
 	
@@ -56,7 +57,7 @@ def join_files(fromfile,tofile):
 		print(fromfile + " not found")
 		raise
 	else:
-		f = open(tofile,"w")
+		f = open(tofile,"a")
 		f.write(second.read())
 		f.close
 		second.close
