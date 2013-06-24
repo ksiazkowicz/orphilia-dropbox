@@ -124,8 +124,8 @@ class StoredSession(session.DropboxSession):
 		url = self.build_authorize_url(request_token)
 		# some code to make this fancy window with URL show up in Haiku OS
 		if sys.platform[:5] == "haiku":
-			putin(url,os.path.normpath(configurationDirectory+'/authorize-url'),'rewrite')
-			drmchujnia = os.system("orphilia_haiku-authorize")
+			putIn(url,os.path.normpath(configurationDirectory+'/authorize-url'),'rewrite')
+			os.system("orphilia_haiku-authorize")
 			os.system('rm ' + os.path.normpath(configurationDirectory+'/authorize-url'))
 		else:
 			print("url:"+ url),
@@ -397,7 +397,7 @@ def client(parameters):
 		f = api_client.account_info()
 		uid = str(f['uid'])
 		try:
-			putin(uid,param,'rewrite')
+			putIn(uid,param,'rewrite')
 		except:
 			print(" x Unable to save file.")
 		print(" > UID updated")
