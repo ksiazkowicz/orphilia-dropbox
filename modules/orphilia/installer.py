@@ -1,29 +1,42 @@
 import sys, os, shutil
 
+def make_executable(path):
+	if sys.platform[:5] == "haiku":
+		os.system('chmod +x '+path)
+		
+	elif sys.platform[:5] != "win32":
+		perm = os.stat(path)
+		os.chmod(path, perm.st_mode | stat.S_IEXEC)
+	
 def install():
 	print('Orphilia Installer')
 	print('---')
-	# check if command is supported on this platform
-	if sys.platform[:3] == 'win':
-		print('This function is not available on this platform')
-		sys.exit(1)
-
+	
 	# define generic installdir and bindir
 	installdir = '/usr/share/orphilia'
 	bindir = '/usr/share/bin'
+	
+	# check if command is supported on this platform
+	if sys.platform[:5] == 'win32':
+		print('This function is not available on this platform')
+		sys.exit(1)
 
 	# use Haiku-specific installdir and bindir	
 	if sys.platform[:5] == 'haiku':
 		installdir = '/boot/apps/orphilia'
 		bindir = '/boot/common/bin'
+		
+	print(installdir)
+	print(bindir)
 
 	#generic instructions
-	os.chmod('./orphilia.py',755) # make orphilia.py executable
+	make_executable('./orphilia.py')
 	try:
 	# generate directory tree
 		os.mkdir(installdir)
 		os.mkdir(installdir + '/dropbox')
 		os.mkdir(installdir + '/orphilia')
+		os.mkdir(installdir + '/orphiliaclient')
 		os.mkdir(installdir + '/shared')
 	except:
 		print('Unable to make install directory tree')
@@ -45,20 +58,23 @@ def install():
 		shutil.copy('./shared/date_rewrite.pyc',installdir + '/shared')
 
 		#copy Orphilia modules
-		shutil.copy('./orphilia/__init__.pyc',installdir + '/orphilia')
-		shutil.copy('./orphilia/client.pyc',installdir + '/orphilia')
-		shutil.copy('./orphilia/config.pyc',installdir + '/orphilia')
-		shutil.copy('./orphilia/installer.pyc',installdir + '/orphilia')
-		shutil.copy('./orphilia/monitor.pyc',installdir + '/orphilia')
+		shutil.copy('./orphilia/__init__.py',installdir + '/orphilia')
+		shutil.copy('./orphilia/common.py',installdir + '/orphilia')
+		shutil.copy('./orphilia/config.py',installdir + '/orphilia')
+		shutil.copy('./orphilia/installer.py',installdir + '/orphilia')
+		
+		shutil.copy('./orphiliaclient/__init__.py', installdir + '/orphiliaclient')
+		shutil.copy('./orphiliaclient/client.py', installdir + '/orphiliaclient')
+		shutil.copy('./orphiliaclient/monitor.py', installdir + '/orphiliaclient')
 
 		#copy notify scripts
 		shutil.copy('./notify/cli-notify',installdir)
-		os.chmod(installdir + '/cli-notify',755)
+		make_executable(installdir + '/cli-notify')
 		
 		#copy platform-specific notify scripts
 		if sys.platform[:5] == "haiku":
 			shutil.copy('./notify/haiku-notify',installdir)
-			os.chmod(installdir + '/haiku-notify',755)
+			make_executable(installdir + '/haiku-notify')
 
 		#copy branding related files
 		shutil.copy('./branding/orphilia.png',installdir + '/branding')
@@ -74,8 +90,8 @@ def install():
 		if sys.platform[:5] == "haiku":
 			shutil.copy('./authorize.yab',installdir + '/authorize.yab')
 			shutil.copy('./yab', installdir)
-			os.chmod(installdir + '/yab',755)
-			os.chmod(installdir + '/authorize.yab',755)
+			make_executable(installdir + '/yab')
+			make_executable(installdir + '/authorize.yab')
 	
 		#make symlinks
 		os.symlink(installdir + '/orphilia.py',bindir + '/orphilia')
