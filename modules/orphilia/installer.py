@@ -46,16 +46,16 @@ def install():
 	# copy all the files
 		shutil.copy('./orphilia.py',installdir)
 	
-		shutil.copy('./dropbox/__init__.pyc',installdir + '/dropbox')
-		shutil.copy('./dropbox/six.pyc',installdir + '/dropbox')
-		shutil.copy('./dropbox/client.pyc',installdir + '/dropbox')
-		shutil.copy('./dropbox/session.pyc',installdir + '/dropbox')
-		shutil.copy('./dropbox/rest.pyc',installdir + '/dropbox')
+		shutil.copy('./dropbox/__init__.py',installdir + '/dropbox')
+		shutil.copy('./dropbox/six.py',installdir + '/dropbox')
+		shutil.copy('./dropbox/client.py',installdir + '/dropbox')
+		shutil.copy('./dropbox/session.py',installdir + '/dropbox')
+		shutil.copy('./dropbox/rest.py',installdir + '/dropbox')
 
 		#copy additional modules
-		shutil.copy('./shared/__init__.pyc',installdir + '/shared')
-		shutil.copy('./shared/path_rewrite.pyc',installdir + '/shared')
-		shutil.copy('./shared/date_rewrite.pyc',installdir + '/shared')
+		shutil.copy('./shared/__init__.py',installdir + '/shared')
+		shutil.copy('./shared/path_rewrite.py',installdir + '/shared')
+		shutil.copy('./shared/date_rewrite.py',installdir + '/shared')
 
 		#copy Orphilia modules
 		shutil.copy('./orphilia/__init__.py',installdir + '/orphilia')
@@ -122,7 +122,7 @@ def uninstall():
 		installdir = '/boot/apps/orphilia'
 		bindir = '/boot/common/bin'
 		
-	os.remove(installdir)
+	shutil.rmtree(installdir)
 	os.remove(bindir + '/orphilia')
 	os.remove(bindir + '/orphilia_cli-notify')
 	
