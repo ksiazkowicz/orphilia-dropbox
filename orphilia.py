@@ -1,8 +1,5 @@
 import sys
 
-####### Orphilia-specific modules
-import orphilia
-
 #generate sys.argv dictionary
 if len(sys.argv) > 1:
 	parameters = sys.argv[2:]
@@ -11,13 +8,19 @@ else:
 	wtd = "brick"
 
 if wtd == "--client":
-    orphilia.client.client(parameters)
+	from orphiliaclient import client
+	print("""Orphilia
+Maciej Janiszewski, 2010-2013
+made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk \n""")
+	client.client(parameters)
 
 elif wtd == "--install":
-    orphilia.installer.install()
+	from orphilia import installer
+	installer.install()
 
 elif wtd == "--uninstall":
-    orphilia.installer.uninstall()
+	from orphilia import installer
+	installer.uninstall()
 
 elif wtd == "--help":
 	print("""
@@ -40,17 +43,21 @@ Syntax: orphilia [OPTION] [PARAMETERS]
     uid   [path]                - gets current accounts Dropbox UID""")
 
 elif wtd == "--configuration":
-    orphilia.config.config()
+	from orphilia import config
+	config.config()
 
 elif wtd == "--configuration-haiku":
-    orphilia.config.config_gui(parameters)
+	from orphilia import config
+	config.config_gui(parameters)
 
 elif wtd == "--monitor":
-    orphilia.monitor.monitor()
+	from orphiliaclient import monitor
+	monitor.monitor()
 
 elif wtd == "--public":
-    orphilia.client.public(parameters)
+	from orphiliaclient import client
+	client.public(parameters)
 
 else:
-     print("Invalid syntax. Type orphilia --help for more informations")
+	print("Invalid syntax. Type orphilia --help for more informations")
 

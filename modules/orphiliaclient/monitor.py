@@ -5,7 +5,7 @@ from shared import path_rewrite
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-configurationDirectory = orphilia.client.getConfigurationDirectory()
+configurationDirectory = orphilia.common.getConfigurationDirectory()
 
 def monitor():
 	class LoggingEventHandler(FileSystemEventHandler):
@@ -25,12 +25,12 @@ def monitor():
 			what = 'directory' if event.is_directory else 'file'
 			if what == "file":
 				tmp = [ 'mv', path, path2]
-				queue.put(orphilia.client.client(tmp))
+				queue.put(orphiliaclient.client.client(tmp))
 			else:
 				tmp = [ 'mkdir', path2 ]
-				queue.put(orphilia.client.client(tmp))
+				queue.put(orphiliaclient.client.client(tmp))
 				tmp = [ 'rm', path ]
-				queue.put(orphilia.client.client(tmp))
+				queue.put(orphiliaclient.client.client(tmp))
 			logging.info(" > Moved %s: from %s to %s", what, event.src_path, event.dest_path)
 
 		def on_created(self, event):
@@ -47,14 +47,14 @@ def monitor():
 								break
 						path = par[len(dropboxPath)+1:]
 						tmp = [ 'put', dropboxPath + path, path2, 'add' ]
-						queue.put(orphilia.client.client(tmp))
+						queue.put(orphiliaclient.client.client(tmp))
 				else:
 						par = event.src_path
 						path = par[len(dropboxPath)+1:]
 						if os.name == "nt":
 							path = path_rewrite.rewritepath('posix',path)
 						tmp = [ 'mkdir', path ]
-						queue.put(orphilia.client.client(tmp))
+						queue.put(orphiliaclient.client.client(tmp))
 				logging.info(" > Created %s: %s", what, event.src_path)
 			else:
 				what = 'directory' if event.is_directory else 'file'
@@ -64,7 +64,7 @@ def monitor():
 					if os.name == "nt":
 						path = path_rewrite.rewritepath('posix',path)
 					tmp = [ 'mkdir', path ]
-					queue.put(orphilia.client.client(tmp))
+					queue.put(orphiliaclient.client.client(tmp))
 					logging.info(" > Created %s: %s", what, event.src_path)
 
 		def on_deleted(self, event):
@@ -75,7 +75,7 @@ def monitor():
 				path = path_rewrite.rewritepath('posix',path)
 			what = 'directory' if event.is_directory else 'file'
 			tmp = [ 'rm', path ]
-			queue.put(orphilia.client.client(tmp))
+			queue.put(orphiliaclient.client.client(tmp))
 			logging.info(" > Deleted %s: %s", what, event.src_path)
 
 		def on_modified(self, event):
@@ -89,7 +89,7 @@ def monitor():
 					path = path_rewrite.rewritepath('posix',path)
 				if os.name <> "nt":
 					tmp = [ 'rm', path ]
-					queue.put(orphilia.client.client(tmp))
+					queue.put(orphiliaclient.client.client(tmp))
 				while True:
 					size1 = os.path.getsize(par)
 					time.sleep(0.2)
@@ -97,10 +97,10 @@ def monitor():
 					if size1 == size2:
 						break
 				tmp = [ 'put', dropboxPath + '/' + path, path, 'upd']
-				queue.put(orphilia.client.client(tmp))
+				queue.put(orphiliaclient.client.client(tmp))
 			logging.info(" > Modified %s: %s", what, event.src_path)
 
-	dropboxPath = orphilia.client.getDropboxPath()
+	dropboxPath = orphilia.common.getDropboxPath()
 
 	logging.basicConfig(level=logging.INFO,
 						format='%(message)s',

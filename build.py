@@ -29,6 +29,7 @@ def gentree():
 		os.mkdir(build_path + '/built/dependencies')
 		os.mkdir(build_path + '/built/dropbox')
 		os.mkdir(build_path + '/built/orphilia')
+		os.mkdir(build_path + '/built/orphiliaclient')
 		os.mkdir(build_path + '/built/shared')
 
 		if platform[:5] == "haiku":
@@ -118,10 +119,13 @@ def copyfiles():
 
 		#copy Orphilia modules
 		shutil.copy(build_path + '/modules/orphilia/__init__.py',build_path + '/built/orphilia')
-		shutil.copy(build_path + '/modules/orphilia/client.py',build_path + '/built/orphilia')
+		shutil.copy(build_path + '/modules/orphilia/common.py',build_path + '/built/orphilia')
 		shutil.copy(build_path + '/modules/orphilia/config.py',build_path + '/built/orphilia')
 		shutil.copy(build_path + '/modules/orphilia/installer.py',build_path + '/built/orphilia')
-		shutil.copy(build_path + '/modules/orphilia/monitor.py',build_path + '/built/orphilia')
+		
+		shutil.copy(build_path + '/modules/orphiliaclient/__init__.py',build_path + '/built/orphiliaclient')
+		shutil.copy(build_path + '/modules/orphiliaclient/client.py',build_path + '/built/orphiliaclient')
+		shutil.copy(build_path + '/modules/orphiliaclient/monitor.py',build_path + '/built/orphiliaclient')
 
 		#copy dependencies
 		shutil.copy(build_path + '/dependencies/ez_setup.py',build_path + '/built/dependencies')

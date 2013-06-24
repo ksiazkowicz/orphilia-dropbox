@@ -1,9 +1,6 @@
 import sys, os, random, cmd, locale, pprint, shlex, json, Queue
 from shared import date_rewrite, path_rewrite
-
-print("""Orphilia
-Maciej Janiszewski, 2010-2013
-made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk \n""")
+from orphilia import common
 
 ####################### initialize Dropbox API #
 ################################################
@@ -21,75 +18,15 @@ if APP_KEY == '' or APP_SECRET == '':
 ############### read settings, get things done #
 ################################################
 ###############################################
-def getConfigurationDirectory():
-	home = os.path.expanduser('~')
-	if sys.platform[:5] == 'haiku':
-		configurationDirectory = os.path.normpath(home + '/config/settings/Orphilia/')
-	elif sys.platform[:3] == 'win':
-		configurationDirectory = os.path.normpath(home + '/AppData/Roaming/Orphilia/')
-	else:
-		configurationDirectory = os.path.normpath(home + '/.orphilia/')
-	return configurationDirectory
 
-configurationDirectory = getConfigurationDirectory()
+configurationDirectory = common.getConfigurationDirectory()
 
-def getDropboxPath():
-	try:
-		open(os.path.normpath(configurationDirectory+'/dropbox-path'), 'r')
-	except:
-		print(' ! Dropbox folder path not specified. Run configuration utility')
-		dropboxPath = os.path.normpath(os.path.expanduser('~') + '/Dropbox')
-	else:
-		dropboxPathSetting = open(os.path.normpath(configurationDirectory+'/dropbox-path'), 'r')
-		dropboxPath = dropboxPathSetting.read()
-		dropboxPathSetting.close()
-	return dropboxPath
-
-def getAccountUID():
-	try:
-		open(os.path.normpath(configurationDirectory+'/dropbox-id'), 'r')
-	except:
-		print(' ! Account UID unknown. Public links won\'t work. Run configuration utility')
-		dropboxUID = 0
-	else:
-		dropboxUIDSetting = open(os.path.normpath(configurationDirectory+'/dropbox-id'), 'r')
-		dropboxUID = dropboxUIDSetting.read()
-		dropboxUIDSetting.close()
-	return dropboxUID
-
-def getNotifier():
-	try:
-		open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
-	except:
-		print(' ! Notifier not specified. Run configuration utility')
-		notifier = ''
-	else:
-		notifierSetting = open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
-		notifier = notifierSetting.read()
-		notifierSetting.close()
-	return notifier
-
-dropboxPath = getDropboxPath()
-accountUID = getAccountUID()
-notifier = getNotifier()
+dropboxPath = common.getDropboxPath()
+accountUID = common.getAccountUID()
+notifier = common.getNotifier()
 
 delta_switch = 0
 STATE_FILE = os.path.normpath(configurationDirectory + '/search_cache.json')
-
-##################### some internal procedures #
-################################################
-###############################################
-def putIn(string,filename,method):
-	if method == "append":
-		putInFile = open(filename,"a")
-	else:
-		putInFile = open(filename,"w")
-	putInFile.write(string)
-	putInFile.close
-	
-def orphiliaNotify(method,string):
-	if notifier != '':
-		os.system(notifier + ' ' + method + ' \"'+ string + '\"')
 
 ################### initialize Dropbox session #
 ################################################
@@ -124,7 +61,7 @@ class StoredSession(session.DropboxSession):
 		url = self.build_authorize_url(request_token)
 		# some code to make this fancy window with URL show up in Haiku OS
 		if sys.platform[:5] == "haiku":
-			putIn(url,os.path.normpath(configurationDirectory+'/authorize-url'),'rewrite')
+			common.putIn(url,os.path.normpath(configurationDirectory+'/authorize-url'),'rewrite')
 			os.system("orphilia_haiku-authorize")
 			os.system('rm ' + os.path.normpath(configurationDirectory+'/authorize-url'))
 		else:
@@ -353,7 +290,7 @@ def client(parameters):
 		api_client.put_file("/" + to_path, from_file)
 		#except:
 		#	print(" x Unable to upload file. ")
-		orphiliaNotify(notify,from_path)
+		common.orphiliaNotify(notify,from_path)
 		
 	elif cmd == "unlink":
 			sess.unlink()
@@ -376,7 +313,7 @@ def client(parameters):
 		path = path_rewrite.rewritepath('posix',parameters[1])
 		try:
 			api_client.file_delete("/" + path)
-			orphiliaNotify('rm',path)
+			common.orphiliaNotify('rm',path)
 		except:
 			print(" x Unable to remove file " + path)
 
@@ -397,7 +334,7 @@ def client(parameters):
 		f = api_client.account_info()
 		uid = str(f['uid'])
 		try:
-			putIn(uid,param,'rewrite')
+			common.putIn(uid,param,'rewrite')
 		except:
 			print(" x Unable to save file.")
 		print(" > UID updated")
@@ -451,4 +388,4 @@ def client(parameters):
 def getPublicLink(parameters):
 	par = parameters[1]
 	link = 'https://dl.dropboxusercontent.com/u/' + accountUID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(dropboxPath + "/Public"))+1:])
-	orphiliaNotify('link',link)
+	common.orphiliaNotify('link',link)
