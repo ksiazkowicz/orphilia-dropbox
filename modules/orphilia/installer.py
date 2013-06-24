@@ -51,6 +51,7 @@ def install():
 		shutil.copy('./dropbox/client.py',installdir + '/dropbox')
 		shutil.copy('./dropbox/session.py',installdir + '/dropbox')
 		shutil.copy('./dropbox/rest.py',installdir + '/dropbox')
+		shutil.copy('./dropbox/util.py',installdir + '/dropbox')
 
 		#copy additional modules
 		shutil.copy('./shared/__init__.py',installdir + '/shared')
