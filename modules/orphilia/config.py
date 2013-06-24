@@ -41,14 +41,14 @@ def config():
 	print("Configuration files has been created.")
 
 def config_gui(parameters):
-	dropboxPath = parameters[0]
-	
 	if os.path.isdir(configurationDirectory):
 		shutil.rmtree(configurationDirectory)
 	os.makedirs(configurationDirectory)
 	common.putIn('0',os.path.normpath(configurationDirectory+'/net-status'),'rewrite')
 	
 	common.putIn('orphilia_haiku-notify',os.path.normpath(configurationDirectory+'/notify-settings'),'rewrite')
+	
+	dropboxPath = parameters[0]
 	
 	if dropboxPath == "default":	
 		dropboxPath = os.path.normpath(home + '/Dropbox')

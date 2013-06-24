@@ -9,8 +9,21 @@ def getConfigurationDirectory():
 	else:
 		configurationDirectory = os.path.normpath(home + '/.orphilia/')
 	return configurationDirectory
+	
+def getNotifier():
+	try:
+		open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
+	except:
+		print(' ! Notifier not specified. Run configuration utility')
+		notifier = ''
+	else:
+		notifierSetting = open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
+		notifier = notifierSetting.read()
+		notifierSetting.close()
+	return notifier
 
 configurationDirectory = getConfigurationDirectory()
+notifier = getNotifier()
 
 def putIn(string,filename,method):
 	if method == "append":
@@ -47,15 +60,3 @@ def getAccountUID():
 		dropboxUID = dropboxUIDSetting.read()
 		dropboxUIDSetting.close()
 	return dropboxUID
-
-def getNotifier():
-	try:
-		open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
-	except:
-		print(' ! Notifier not specified. Run configuration utility')
-		notifier = ''
-	else:
-		notifierSetting = open(os.path.normpath(configurationDirectory+'/notify-settings'), 'r')
-		notifier = notifierSetting.read()
-		notifierSetting.close()
-	return notifier

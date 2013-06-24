@@ -1,4 +1,4 @@
-import sys, os, logging, time, orphilia, Queue
+import sys, os, logging, time, orphilia, orphiliaclient, Queue
 
 from shared import path_rewrite
 
@@ -35,6 +35,7 @@ def monitor():
 
 		def on_created(self, event):
 			super(LoggingEventHandler, self).on_created(event)
+			
 			if os.name <> "nt":
 				what = 'directory' if event.is_directory else 'file'
 				if what == 'file':
@@ -46,7 +47,8 @@ def monitor():
 							if size1 == size2:
 								break
 						path = par[len(dropboxPath)+1:]
-						tmp = [ 'put', dropboxPath + path, path2, 'add' ]
+						
+						tmp = [ 'put', dropboxPath + '/' + path, path, 'add' ]
 						queue.put(orphiliaclient.client.client(tmp))
 				else:
 						par = event.src_path
