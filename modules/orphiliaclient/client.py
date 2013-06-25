@@ -1,4 +1,4 @@
-import sys, os, random, cmd, locale, pprint, shlex, json, Queue
+import sys, os, shutil, random, cmd, locale, pprint, shlex, json, Queue
 from shared import date_rewrite, path_rewrite
 from orphilia import common
 
@@ -150,7 +150,7 @@ def apply_delta(root, e):
 				except:
 					print(" x Something went wrong. Unable to get file.")
 	else:
-		print(' - ' + metadata['path'])
+		print(' - ' + path.encode("utf-8"))
 		if delta_switch == 0:
 			try:
 				queue.put(os.remove(dropboxPath + '/' + path))
@@ -164,7 +164,10 @@ def apply_delta(root, e):
 			node = children.get(part)
 			# If one of the parent folders is missing, then we're done.
 			if node is None or not node.is_folder(): 
-				chleb.put(os.rmtree(dropboxPath+node.path)) 
+				try:
+					queue.put(shutil.rmtree(dropboxPath+path)) 
+				except:
+					print(' x Something went wrong. Unable to remove path')
 				break
 			children = node.content
 		else:
