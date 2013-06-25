@@ -113,7 +113,7 @@ class Node(object):
 			return jcontent
 
 def apply_delta(root, e):
-	chleb = Queue.Queue(0)
+	queue = Queue.Queue(0)
 	path, metadata = e
 	branch, leaf = split_path(path)
 
@@ -138,24 +138,24 @@ def apply_delta(root, e):
 				node.content = {}
 			if delta_switch == 0:
 				try:
-					os.mkdir(dropboxPath + "/" + path)
+					os.mkdir(dropboxPath + "/" + metadata['path'])
 				except:
 					pass
 		else:
 			node.content = metadata['size'], metadata['modified']
-			tmp = [ 'get', path, dropboxPath + "/" + path]
+			tmp = [ 'get', node.path, dropboxPath + "/" + node.path]
 			if delta_switch == 0:
 				try:
-					chleb.put(client_new(tmp))
+					queue.put(client(tmp))
 				except:
-					print(" x Something went wrong")
+					print(" x Something went wrong. Unable to get file.")
 	else:
 		print(' - ' + path)
 		if delta_switch == 0:
 			try:
-				chleb.put(os.remove(dropboxPath + '/' + path))
+				queue.put(os.remove(dropboxPath + '/' + path))
 			except:
-				print(' x Something went wrong')
+				print(' x Something went wrong. Unable to remove element.')
 	
 		# Traverse down the tree until we find the parent of the entry we
 		# want to delete.
@@ -164,7 +164,7 @@ def apply_delta(root, e):
 			node = children.get(part)
 			# If one of the parent folders is missing, then we're done.
 			if node is None or not node.is_folder(): 
-				chleb.put(os.rmtree(dropboxPath+path)) 
+				chleb.put(os.rmtree(dropboxPath+node.path)) 
 				break
 			children = node.content
 		else:
