@@ -118,7 +118,7 @@ def apply_delta(root, e):
 	branch, leaf = split_path(path)
 
 	if metadata is not None:
-		print(' + ' + path)
+		print(' + ' + path.encode("utf-8"))
 		# Traverse down the tree until we find the parent folder of the entry
 		# we want to add. Create any missing folders along the way.
 		children = root
@@ -150,7 +150,7 @@ def apply_delta(root, e):
 				except:
 					print(" x Something went wrong. Unable to get file.")
 	else:
-		print(' - ' + path)
+		print(' - ' + metadata['path'])
 		if delta_switch == 0:
 			try:
 				queue.put(os.remove(dropboxPath + '/' + path))
@@ -343,18 +343,22 @@ def client(parameters):
 		from_path = parameters[1]
 		to_path = parameters[2]
 		
-		resp = api_client.metadata(from_path)
-		modified = resp['modified']
-		date1 = modified[5:]
-		date1 = date_rewrite.generate_modifytime(date1)
-		f = api_client.get_file("/" + from_path)
-		file = open(to_path,"wb")
 		try:
-			file.write(f.read())
+			open(os.path.expanduser(to_path), 'rb')
 		except:
-			print(" x Unable to save file.")
-		file.close()
-		os.system("touch -d \"" + date1 + "\" \"" + to_path + "\"") # this solution won't work on Windows
+			resp = api_client.metadata(from_path)
+			modified = resp['modified']
+			date1 = modified[5:]
+			date1 = date_rewrite.generate_modifytime(date1)
+			f = api_client.get_file("/" + from_path)
+			file = open(to_path,"wb")
+			try:
+				file.write(f.read())
+			except:
+				print(" x Unable to save file.")
+			file.close()
+			if sys.platform[:5] != "win32":
+				os.system("touch -d \"" + date1 + "\" \"" + to_path + "\"") # this solution won't work on Windows
 		
 	elif cmd == "sync_folder":
 		path = parameters[1]
