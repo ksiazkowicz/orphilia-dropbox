@@ -1,4 +1,4 @@
-import sys, os, shutil, random, cmd, locale, pprint, shlex, json, Queue
+import sys, os, shutil, random, cmd, locale, pprint, shlex, json, Queue, datetime, time
 from shared import date_rewrite, path_rewrite
 from orphilia import common
 
@@ -346,13 +346,15 @@ def client(parameters):
 		from_path = parameters[1]
 		to_path = parameters[2]
 		
+		should_check = True
+		
+		resp = api_client.metadata(from_path)
+		modified = resp['modified']
+		
 		try:
 			open(os.path.expanduser(to_path), 'rb')
 		except:
-			resp = api_client.metadata(from_path)
-			modified = resp['modified']
-			date1 = modified[5:]
-			date1 = date_rewrite.generate_modifytime(date1)
+			date1 = time.mktime(datetime.datetime.strptime(modified, "%a, %d %b %Y %H:%M:%S +0000").timetuple())
 			f = api_client.get_file("/" + from_path)
 			file = open(to_path,"wb")
 			try:
@@ -360,36 +362,24 @@ def client(parameters):
 			except:
 				print(" x Unable to save file.")
 			file.close()
-			if sys.platform[:5] != "win32":
-				os.system("touch -d \"" + date1 + "\" \"" + to_path + "\"") # this solution won't work on Windows
+			os.utime(os.path.normpath(to_path),(date1,date1))
+			should_check = False
+		if (should_check):		
+			localTime = os.path.getmtime(to_path)
+			dropboxTime = time.mktime(datetime.datetime.strptime(modified, "%a, %d %b %Y %H:%M:%S +0000").timetuple())
+			if (localTime < dropboxTime):
+				f = api_client.get_file("/" + from_path)
+				file = open(to_path,"wb")
+				try:
+					file.write(f.read())
+				except:
+					print(" x Unable to save file.")
+				file.close()
+				os.utime(to_path,(dropboxTime,dropboxTime))
+			else:
+				print(" > No need to update. localTime: " + str(localTime) + "; dropboxTime: " + str(dropboxTime))
+			
 		
-	elif cmd == "sync_folder":
-		path = parameters[1]
-		
-		resp = api_client.metadata(path) # gets list of files in directory on Dropbox
-		dirlist = os.listdir(dropboxPath + "/" + path) # gets list of files in directory on local computer
-		rand1 = random.random() # generates random integer
-		
-		queue = Queue.Queue(0)
-	
-		if 'contents' in resp: # begin comparing both lists
-			for f in resp['contents']:
-				name = os.path.basename(f['path'])
-				encoding = locale.getdefaultlocale()[1]
-				if ('%s' % name).encode(encoding) not in dirlist: # found Dropbox file, which isn't present on local computer
-					print ('%s' % name).encode(encoding) + " not found."
-					if not os.path.isfile(('%s' % name).encode(encoding)):
-						dir = f['is_dir']
-						if not dir:
-							tmp = [ 'get', path + "/" + name, dropboxPath + "/" + path + name]
-							queue.put(client_new(tmp))
-						if dir:
-							os.mkdir(dropboxPath + "/" + path +  ('%s' % name).encode(encoding))
-				else: # found Dropbox file which is present on local computer, check this out, bro!
-					name = os.path.basename(f['path'])
-					encoding = locale.getdefaultlocale()[1]
-					print(('%s' % name).encode(encoding) + " found. Checking...")
-
 	print(" > Command '" + parameters[0] + "' executed")
 	
 def getPublicLink(parameters):
