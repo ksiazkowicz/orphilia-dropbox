@@ -48,7 +48,7 @@ def monitor():
 								break
 						path = par[len(dropboxPath)+1:]
 						
-						tmp = [ 'put', dropboxPath + '/' + path, path, 'add' ]
+						tmp = [ 'sync', path ]
 						queue.put(orphiliaclient.client.client(tmp))
 				else:
 						par = event.src_path
@@ -86,7 +86,7 @@ def monitor():
 			what = 'directory' if event.is_directory else 'file'
 			if what == "file":
 				par = event.src_path
-				path = par[len(dropboxPath)+1:]
+				path = par[len(dropboxPath):]
 				if os.name == "nt":
 					path = path_rewrite.rewritepath('posix',path)
 				if os.name <> "nt":
@@ -98,7 +98,7 @@ def monitor():
 					size2 = os.path.getsize(par)
 					if size1 == size2:
 						break
-				tmp = [ 'put', dropboxPath + '/' + path, path, 'upd']
+				tmp = [ 'sync', path ]
 				queue.put(orphiliaclient.client.client(tmp))
 			logging.info(" > Modified %s: %s", what, event.src_path)
 

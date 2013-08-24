@@ -143,7 +143,7 @@ def apply_delta(root, e):
 					pass
 		else:
 			node.content = metadata['size'], metadata['modified']
-			tmp = [ 'get', node.path, dropboxPath + "/" + node.path]
+			tmp = [ 'sync', node.path]
 			if delta_switch == 0:
 				try:
 					queue.put(client(tmp))
@@ -353,39 +353,47 @@ def client(parameters):
 		from_path = parameters[1]
 		to_path = parameters[2]
 		
-		should_check = True
-		
 		resp = api_client.metadata(from_path)
 		modified = resp['modified']
 		
+		open(os.path.expanduser(to_path), 'rb')
+		date1 = time.mktime(datetime.datetime.strptime(modified, "%a, %d %b %Y %H:%M:%S +0000").timetuple())
+		f = api_client.get_file("/" + from_path)
+		file = open(to_path,"wb")
 		try:
-			open(os.path.expanduser(to_path), 'rb')
+			file.write(f.read())
 		except:
-			date1 = time.mktime(datetime.datetime.strptime(modified, "%a, %d %b %Y %H:%M:%S +0000").timetuple())
-			f = api_client.get_file("/" + from_path)
-			file = open(to_path,"wb")
-			try:
-				file.write(f.read())
-			except:
-				print(" x Unable to save file.")
-			file.close()
-			os.utime(os.path.normpath(to_path),(date1,date1))
-			should_check = False
-		if (should_check):		
-			localTime = os.path.getmtime(to_path)
+			print(" x Unable to save file.")
+		file.close()
+		os.utime(os.path.normpath(to_path),(date1,date1))
+
+	elif cmd == "sync":
+		path = parameters[1]
+		localPath = os.path.normpath(dropboxPath + '/' + path)
+		change = 'upd'
+		
+		try:
+			resp = api_client.metadata(path)
+			modified = resp['client_mtime']
+		except:
+			change = 'add'
+		
+		localTime = os.path.getmtime(localPath)
+		
+		if (change != 'add'):
 			dropboxTime = time.mktime(datetime.datetime.strptime(modified, "%a, %d %b %Y %H:%M:%S +0000").timetuple())
-			if (localTime < dropboxTime):
-				f = api_client.get_file("/" + from_path)
-				file = open(to_path,"wb")
-				try:
-					file.write(f.read())
-				except:
-					print(" x Unable to save file.")
-				file.close()
-				os.utime(to_path,(dropboxTime,dropboxTime))
-			else:
-				print(" > No need to update. localTime: " + str(localTime) + "; dropboxTime: " + str(dropboxTime))
-			
+		
+		if ((change != 'add') and (localTime < dropboxTime)):
+			tmp = ['get',path,localPath]
+			client(tmp)
+		elif ((change != 'add') and (localTime == dropboxTime)):
+			print(" > No need to update. localTime: " + str(localTime) + " = dropboxTime: " + str(dropboxTime))
+		else:
+			if (change != 'add'):
+				tmp = ['rm', path]
+				client(tmp)
+			tmp = ['put',localPath,path,change]
+			client(tmp)
 		
 	print(" > Command '" + parameters[0] + "' executed")
 	
