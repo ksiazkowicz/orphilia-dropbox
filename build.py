@@ -126,7 +126,8 @@ def copyfiles():
 		shutil.copy(build_path + '/modules/orphiliaclient/__init__.py',build_path + '/built/orphiliaclient')
 		shutil.copy(build_path + '/modules/orphiliaclient/client.py',build_path + '/built/orphiliaclient')
 		shutil.copy(build_path + '/modules/orphiliaclient/monitor.py',build_path + '/built/orphiliaclient')
-
+		shutil.copy(build_path + '/modules/orphiliaclient/delta.py',build_path + '/built/orphiliaclient')
+		
 		#copy dependencies
 		shutil.copy(build_path + '/dependencies/ez_setup.py',build_path + '/built/dependencies')
 		shutil.copy(build_path + '/dependencies/setup.py',build_path + '/built/dependencies')

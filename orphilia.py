@@ -28,6 +28,7 @@ Syntax: orphilia [OPTION] [PARAMETERS]
 	
  --help          - displays this text
  --monitor       - monitors Dropbox folder activity
+ --delta         - monitors server-side activity
  --configuration - runs configuration wizard
  --public        - generates public links
  --install       - installs Orphilia
@@ -53,6 +54,10 @@ elif wtd == "--configuration-haiku":
 elif wtd == "--monitor":
 	from orphiliaclient import monitor
 	monitor.monitor()
+	
+elif wtd == "--delta":
+	from orphiliaclient import delta
+	delta.monitor()
 
 elif wtd == "--public":
 	from orphiliaclient import client
