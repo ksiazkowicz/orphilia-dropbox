@@ -260,6 +260,9 @@ def client(parameters):
 			delta_switch = 0
 		
 		while (page_limit is None) or (page < page_limit):
+			# Make an int for progress/total
+			progress = 0
+			total = 0
 			# Get /delta results from Dropbox
 			result = api_client.delta(cursor)
 			page += 1
@@ -270,7 +273,11 @@ def client(parameters):
 			cursor = result['cursor']
 			# Apply the entries one by one to our cached tree.
 			for delta_entry in result['entries']:
+				total = total+1
+			for delta_entry in result['entries']:
 				changed = True
+				progress = progress +1
+				print("Current entry: "+str(progress)+"/"+str(total))
 				apply_delta(tree, delta_entry)
 				cursor = result['cursor']
 				if not result['has_more']: break
