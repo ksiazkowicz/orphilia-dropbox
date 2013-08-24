@@ -252,7 +252,7 @@ def client(parameters):
 		tree = state['tree']
 		page = 0
 		changed = False
-		page_limit = 5
+		page_limit = 15
 		
 		try:
 			delta_switch = parameter[1]
