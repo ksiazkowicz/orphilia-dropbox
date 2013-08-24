@@ -7,10 +7,7 @@ Maciej Janiszewski (PisarzKsiazkowicz)
 Orphilia is an open-source Dropbox client written in Python. Project's main goal is to provide an open-source desktop Dropbox client for platforms, that aren't supported (for example, Haiku). Orphilia is script-based which makes it platform-independent. It's written using Dropbox SDK from here, which has been integrated into Orphilia's source code and is not required for installation.
 
 [!] IMPORTANT [!]
-	Even though most of the work is currently done on Windows, it's not a target platform. If you still want to try it there, USE THE FORCE (--force parameter).
-
-[!] IMPORTANT [!]
-	Orphilia doesn't have production status yet, so you'll need your own API keys (from here - https://www.dropbox.com/developers) in order to test it.
+	Orphilia doesn't have production status yet, so only 100 accounts can use my API keys.
 
 Installing dependencies (Linux/FreeBSD/Windows):
 ---
@@ -19,12 +16,7 @@ Installing dependencies (Linux/FreeBSD/Windows):
 
 Building:
 ---
-Haiku/Linux/FreeBSD:
-	python build.py
-
-Windows: 
-	python build.py --force
-
+	python build.py [--force, optional]
 
 Installing
 ---

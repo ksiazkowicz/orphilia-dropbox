@@ -233,5 +233,10 @@ elif platform[:5] == "linux":
 elif platform[:7] == "freebsd":
 	print(" FreeBSD [OK]")
 	buildorphilia()
+	
+elif platform[:5] == "win32":
+	print(" Windows [OK]")
+	buildorphilia()
+	
 else:
 	checkforced()
