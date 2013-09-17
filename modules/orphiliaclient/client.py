@@ -1,5 +1,5 @@
 import sys, os, shutil, random, cmd, locale, pprint, shlex, json, Queue, datetime, time
-from shared import date_rewrite, path_rewrite
+from shared import path_rewrite
 from orphilia import common
 
 ####################### initialize Dropbox API #
@@ -41,10 +41,10 @@ class StoredSession(session.DropboxSession):
 		try:
 			stored_creds = open(self.TOKEN_FILE).read()
 			self.set_token(*stored_creds.split('|'))
-			print(" OK")
+			print(" [OK]")
 		except IOError:
-			print(" FAILED")
-			print(" x Access token not found. Beggining new session.")
+			print(" [FAILED]")
+			print(" x Access token not found. Beginning new session.")
 			self.link()
 
 	def write_creds(self, token):
@@ -60,6 +60,7 @@ class StoredSession(session.DropboxSession):
 		request_token = self.obtain_request_token()
 		url = self.build_authorize_url(request_token)
 		# some code to make this fancy window with URL show up in Haiku OS
+		# it's temporary btw.
 		if sys.platform[:5] == "haiku":
 			common.putIn(url,os.path.normpath(configurationDirectory+'/authorize-url'),'rewrite')
 			os.system("orphilia_haiku-authorize")

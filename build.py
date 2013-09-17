@@ -101,7 +101,6 @@ def copyfiles():
 		#copy additional modules
 		shutil.copy(build_path + '/modules/shared/__init__.py',build_path + '/built/shared')
 		shutil.copy(build_path + '/modules/shared/path_rewrite.py',build_path + '/built/shared')
-		shutil.copy(build_path + '/modules/shared/date_rewrite.py',build_path + '/built/shared')
 
 		#copy Orphilia modules
 		shutil.copy(build_path + '/modules/orphilia/__init__.py',build_path + '/built/orphilia')
