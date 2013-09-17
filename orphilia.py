@@ -14,14 +14,6 @@ Maciej Janiszewski, 2010-2013
 made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk \n""")
 	client.client(parameters)
 
-elif wtd == "--install":
-	from orphilia import installer
-	installer.install()
-
-elif wtd == "--uninstall":
-	from orphilia import installer
-	installer.uninstall()
-
 elif wtd == "--help":
 	print("""
 Syntax: orphilia [OPTION] [PARAMETERS]
@@ -31,8 +23,6 @@ Syntax: orphilia [OPTION] [PARAMETERS]
  --delta         - monitors server-side activity
  --configuration - runs configuration wizard
  --public        - generates public links
- --install       - installs Orphilia
- --uninstall     - uninstalls Orphilia
  --client        - runs Orphilia API Client
    syntax: orphilia --client [parameter1] [parameter2] [parameter3]
     get   [from path] [to path] - downloads file

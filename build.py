@@ -3,7 +3,7 @@
 import os, sys, shutil
 
 build_path = os.getcwd()
-parser = 'generic-parser.py'
+parser = '#!/usr/bin/python'
 
 try:
 	sys.argv[1]
@@ -50,8 +50,8 @@ def make_executable(path):
 	elif sys.platform[:5] != "win32":
 		perm = os.stat(path)
 		os.chmod(path, perm.st_mode | stat.S_IEXEC)
-	
-def join_files(fromfile,tofile):
+		
+def add_parser(parser,fromfile,tofile):
 	try:
 		second = open(fromfile,"r")
 	except:
@@ -59,42 +59,28 @@ def join_files(fromfile,tofile):
 		raise
 	else:
 		f = open(tofile,"a")
+		f.write(parser+"\n")
 		f.write(second.read())
 		f.close
 		second.close
 		
+def windows_workaround():
+	batch = open(build_path+"/built/orphilia.bat","w")
+	batch.write("@echo off\norphilia.py %*")
+	batch.close
+		
 def genorphilia():
 	try:
-		try:
-			join_files(build_path + '/modules/parser/'+ parser,build_path + '/built/orphilia2.py')
-		except:
-			print(" [FAILED]")
-			print("Unable to join files " + build_path + '/modules/parser/'+ parser + " and " + build_path + '/built/orphilia2.py')
-			raise
-		else:
-			try:
-				join_files('orphilia.py',build_path + '/built/orphilia2.py')
-			except:
-				print(" [FAILED]")
-				print("Unable to join files orphilia.py and " + build_path + '/built/orphilia2.py')
-				raise
+		add_parser(parser,build_path + '/orphilia.py',build_path + '/built/orphilia.py')
 			
 		if platform != "win32":		
 			os.system("tr -d '\r' <"+build_path+"/built/orphilia2.py> " + build_path + "/built/orphilia.py")
+			try:
+				make_executable(build_path + '/built/orphilia.py')
+			except:
+				print("Unable to set executable bit for " + build_path + '/built/orphilia.py')
 		else:
-			shutil.copy(build_path+"/built/orphilia2.py",build_path + "/built/orphilia.py")
-		
-		try:
-			os.remove(build_path + '/built/orphilia2.py')
-		except:
-			print(" [FAILED]")
-			print("Unable to remove "+ build_path + "/build/orphilia2.py")
-			raise
-		
-		try:
-			make_executable(build_path + '/built/orphilia.py')
-		except:
-			print("Unable to set executable bit for " + build_path + '/built/orphilia.py')
+			windows_workaround()
 			
 	except:
 		print("Unable to generate orphilia.py. Check if you have read/write permissions to this catalog.")
@@ -121,7 +107,6 @@ def copyfiles():
 		shutil.copy(build_path + '/modules/orphilia/__init__.py',build_path + '/built/orphilia')
 		shutil.copy(build_path + '/modules/orphilia/common.py',build_path + '/built/orphilia')
 		shutil.copy(build_path + '/modules/orphilia/config.py',build_path + '/built/orphilia')
-		shutil.copy(build_path + '/modules/orphilia/installer.py',build_path + '/built/orphilia')
 		
 		shutil.copy(build_path + '/modules/orphiliaclient/__init__.py',build_path + '/built/orphiliaclient')
 		shutil.copy(build_path + '/modules/orphiliaclient/client.py',build_path + '/built/orphiliaclient')
@@ -179,17 +164,6 @@ def buildorphilia():
 			sys.exit(1)
 		print(" [OK]")
 		
-	if platform[:5] == "win32":
-		print("Copying platform-specific files..."),
-		try:
-			shutil.copy(build_path + '/modules/windows-workaround/orphilia.bat',build_path + '/built')
-			
-		except:
-			print(" [FAILED]")
-			print("Check if you have read/write permissions to this catalog.")
-			sys.exit(1)
-		print(" [OK]")
-		
 def warn():
 	print(" "+platform+" [WARNING]")
 	print("Please bear in mind, that this platform is not supported in this revision")
@@ -202,7 +176,7 @@ def checkforced():
 	else:
 		if sys.argv[1] == "--force":
 			warn()
-			parser = 'haiku-parser.py'
+			parser = '#!python'
 			buildorphilia()
 		else:
 			try:
@@ -213,7 +187,7 @@ def checkforced():
 			else:
 				if sys.argv[2] == "--force":
 					warn()
-					parser = 'haiku-parser.py'
+					parser = '#!python'
 					buildorphilia()
 				else:
 					print(" "+platform+" [FAILED]")
@@ -224,7 +198,7 @@ print("Identifying platform..."),
 
 if platform[:5] == "haiku":
 	print(" Haiku [OK]")
-	parser = 'haiku-parser.py'
+	parser = '#!python'
 	buildorphilia()
 	
 elif platform[:5] == "linux":
