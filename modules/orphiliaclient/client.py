@@ -9,7 +9,7 @@ from dropbox import client, rest, session
 APP_KEY = 'ij4b7rjc7tsnlj4'
 APP_SECRET = '00evf045y00ml2e'
 ACCESS_TYPE = 'dropbox'
-SDK_VERSION = "1.5"
+SDK_VERSION = "2.0"
 
 # check if I specified app_key and app_secret	
 if APP_KEY == '' or APP_SECRET == '':
@@ -247,6 +247,12 @@ def client(parameters):
 				file.write(('%s\n' % name).encode(encoding))
 		file.close()
 		
+	if cmd == "share":
+		param = parameters[1]
+		f = api_client.share(param)
+		url = str(f['url'])
+		print(" > Generated link: " + url)
+		
 	elif cmd == "delta":
 		state = load_state()
 		cursor = state.get('cursor')
@@ -399,6 +405,7 @@ def client(parameters):
 	print(" > Command '" + parameters[0] + "' executed")
 	
 def getPublicLink(parameters):
-	par = parameters[1]
+	par = parameters[0]
 	link = 'https://dl.dropboxusercontent.com/u/' + accountUID + '/' + path_rewrite.rewritepath('url',par[len(os.path.normpath(dropboxPath + "/Public"))+1:])
 	common.orphiliaNotify('link',link)
+	print(link)

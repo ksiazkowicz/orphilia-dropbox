@@ -51,7 +51,7 @@ elif wtd == "--delta":
 
 elif wtd == "--public":
 	from orphiliaclient import client
-	client.public(parameters)
+	client.getPublicLink(parameters)
 
 else:
 	print("Invalid syntax. Type orphilia --help for more informations")
