@@ -94,7 +94,7 @@ def copyfiles():
 		shutil.copy(build_path + '/modules/dropbox/__init__.py',build_path + '/built/dropbox')
 		shutil.copy(build_path + '/modules/dropbox/client.py',build_path + '/built/dropbox')
 		shutil.copy(build_path + '/modules/dropbox/six.py',build_path + '/built/dropbox')
-		shutil.copy(build_path + '/modules/dropbox/util.py',build_path + '/built/dropbox')
+		shutil.copy(build_path + '/modules/dropbox/datastore.py',build_path + '/built/dropbox')
 		shutil.copy(build_path + '/modules/dropbox/session.py',build_path + '/built/dropbox')
 		shutil.copy(build_path + '/modules/dropbox/rest.py',build_path + '/built/dropbox')
 
