@@ -74,7 +74,6 @@ def genorphilia():
 		add_parser(parser,build_path + '/orphilia.py',build_path + '/built/orphilia.py')
 			
 		if platform != "win32":		
-			os.system("tr -d '\r' <"+build_path+"/built/orphilia2.py> " + build_path + "/built/orphilia.py")
 			try:
 				make_executable(build_path + '/built/orphilia.py')
 			except:
