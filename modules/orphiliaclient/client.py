@@ -59,15 +59,11 @@ class StoredSession(session.DropboxSession):
 		print(" > Authorizing...")
 		request_token = self.obtain_request_token()
 		url = self.build_authorize_url(request_token)
-		# some code to make this fancy window with URL show up in Haiku OS
-		# it's temporary btw.
-		if sys.platform[:5] == "haiku":
-			common.putIn(url,os.path.normpath(configurationDirectory+'/authorize-url'),'rewrite')
-			os.system("orphilia_haiku-authorize")
-			os.system('rm ' + os.path.normpath(configurationDirectory+'/authorize-url'))
-		else:
-			print("url:"+ url),
-			raw_input()
+		
+		# display authentication URL
+		# might be enhanced with cool GUI stuff in the future
+		print("url:"+ url),
+		raw_input()
 
 		self.obtain_access_token(request_token)
 		self.write_creds(self.token)
