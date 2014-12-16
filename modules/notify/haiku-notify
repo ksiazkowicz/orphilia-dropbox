@@ -2,11 +2,10 @@
 
 import os
 import sys
-import commands
 
 type = sys.argv[1]
 message = sys.argv[2]
-B_ICON_PATH=commands.getoutput('finddir B_SYSTEM_BIN_DIRECTORY') + "/orphilia_dropbox/notify/orphilia.png"
+B_ICON_PATH=os.path.dirname(os.path.realpath(sys.argv[0])) + "/orphilia.png"
 
 def putin(string,filename,method):
 	if method == "append":
@@ -17,7 +16,7 @@ def putin(string,filename,method):
 	putinfile.close
 
 def haiku_notify(string):
-    os.system('notify --type information --messageID 0 --group Orphilia --title \"Orphilia\" --icon B_ICON_PATH \"' +string + '\"' )
+	os.system('notify --type information --messageID 0 --group Orphilia --title \"Orphilia\" --icon B_ICON_PATH \"' +string + '\"' )
 
 if type == "add":
 	haiku_notify("File " + sys.argv[2] + " has been added to your Dropbox.")
