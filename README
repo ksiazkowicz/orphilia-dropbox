@@ -9,19 +9,6 @@ Orphilia is an open-source Dropbox client written in Python. Project's main goal
 [!] IMPORTANT [!]
 	Orphilia doesn't have production status yet, so only 100 accounts can use my API keys.
 
-Installing dependencies (Linux/FreeBSD/Windows):
+Installing dependencies:
 ---
-	Go to dependencies directory and run "python setup.py install" from command prompt/BASH shell.
-
-
-Building:
----
-	python build.py [--force, optional]
-
-Installing
----
-Haiku:
-	To install, double-click on haiku_install.sh
-
-Linux/FreeBSD (CLI):
-	Make sure that Python and required modules are installed, then type: orphilia --install
+	Run "pip install -r requirements.txt" from command prompt/BASH shell.
