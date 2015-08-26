@@ -1,0 +1,4 @@
+dropbox
+oauth
+simplejson
+watchdog
