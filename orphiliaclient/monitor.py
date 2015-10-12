@@ -40,16 +40,18 @@ def monitor():
 				what = 'directory' if event.is_directory else 'file'
 				if what == 'file':
 						par = event.src_path
-						while True:
-							size1 = os.path.getsize(par)
-							time.sleep(0.5)
-							size2 = os.path.getsize(par)
-							if size1 == size2:
-								break
-						path = par[len(dropboxPath)+1:]
 						
-						tmp = [ 'sync', path ]
-						queue.put(orphiliaclient.client.client(tmp))
+						if os.path.isfile(par):
+							while True:
+								size1 = os.path.getsize(par)
+								time.sleep(0.5)
+								size2 = os.path.getsize(par)
+								if size1 == size2:
+									break
+							path = par[len(dropboxPath)+1:]
+
+							tmp = [ 'sync', path ]
+							queue.put(orphiliaclient.client.client(tmp))
 				else:
 						par = event.src_path
 						path = par[len(dropboxPath)+1:]
@@ -86,20 +88,21 @@ def monitor():
 			what = 'directory' if event.is_directory else 'file'
 			if what == "file":
 				par = event.src_path
-				path = par[len(dropboxPath):]
-				if os.name == "nt":
-					path = path_rewrite.rewritepath('posix',path)
-				if os.name <> "nt":
-					tmp = [ 'rm', path ]
+				if os.path.isfile(par):
+					path = par[len(dropboxPath):]
+					if os.name == "nt":
+						path = path_rewrite.rewritepath('posix',path)
+					if os.name <> "nt":
+						tmp = [ 'rm', path ]
+						queue.put(orphiliaclient.client.client(tmp))
+					while True:
+						size1 = os.path.getsize(par)
+						time.sleep(0.2)
+						size2 = os.path.getsize(par)
+						if size1 == size2:
+							break
+					tmp = [ 'sync', path ]
 					queue.put(orphiliaclient.client.client(tmp))
-				while True:
-					size1 = os.path.getsize(par)
-					time.sleep(0.2)
-					size2 = os.path.getsize(par)
-					if size1 == size2:
-						break
-				tmp = [ 'sync', path ]
-				queue.put(orphiliaclient.client.client(tmp))
 			logging.info(" > Modified %s: %s", what, event.src_path)
 
 	dropboxPath = orphilia.common.getDropboxPath()
