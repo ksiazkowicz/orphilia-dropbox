@@ -1,21 +1,22 @@
 import sys
 
-#generate sys.argv dictionary
+# generate sys.argv dictionary
 if len(sys.argv) > 1:
-	parameters = sys.argv[2:]
-	wtd = sys.argv[1]
+    parameters = sys.argv[2:]
+    wtd = sys.argv[1]
 else:
-	wtd = "brick"
+    wtd = "brick"
 
 if wtd == "--client":
-	from orphiliaclient import client
-	print("""Orphilia
+    from orphiliaclient import client
+
+    print("""Orphilia
 Maciej Janiszewski, 2010-2013
 made with Dropbox SDK from https://www.dropbox.com/developers/reference/sdk \n""")
-	client.client(parameters)
+    client.client(parameters)
 
 elif wtd == "--help":
-	print("""
+    print("""
 Syntax: orphilia [OPTION] [PARAMETERS]
 	
  --help          - displays this text
@@ -34,25 +35,24 @@ Syntax: orphilia [OPTION] [PARAMETERS]
     uid   [path]                - gets current accounts Dropbox UID""")
 
 elif wtd == "--configuration":
-	from orphilia import config
-	config.config()
+    from orphilia import config
 
-elif wtd == "--configuration-haiku":
-	from orphilia import config
-	config.config_gui(parameters)
+    config.config()
 
 elif wtd == "--monitor":
-	from orphiliaclient import monitor
-	monitor.monitor()
-	
+    from orphiliaclient import monitor
+
+    monitor.monitor()
+
 elif wtd == "--delta":
-	from orphiliaclient import delta
-	delta.monitor()
+    from orphiliaclient import delta
+
+    delta.monitor()
 
 elif wtd == "--public":
-	from orphiliaclient import client
-	client.getPublicLink(parameters)
+    from orphiliaclient import client
+
+    client.getPublicLink(parameters)
 
 else:
-	print("Invalid syntax. Type orphilia --help for more informations")
-
+    print("Invalid syntax. Type orphilia --help for more informations")

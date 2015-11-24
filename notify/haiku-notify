@@ -5,30 +5,34 @@ import sys
 
 type = sys.argv[1]
 message = sys.argv[2]
-B_ICON_PATH=os.path.dirname(os.path.realpath(sys.argv[0])) + "/orphilia.png"
+B_ICON_PATH = os.path.dirname(os.path.realpath(sys.argv[0])) + "/orphilia.png"
 
-def putin(string,filename,method):
-	if method == "append":
-		putinfile = open(filename,"a")
-	else:
-		putinfile = open(filename,"w")
-	putinfile.write(string)
-	putinfile.close
+
+def putin(string, filename, method):
+    if method == "append":
+        putinfile = open(filename, "a")
+    else:
+        putinfile = open(filename, "w")
+    putinfile.write(string)
+    putinfile.close
+
 
 def haiku_notify(string):
-	os.system('notify --type information --messageID 0 --group Orphilia --title \"Orphilia\" --icon B_ICON_PATH \"' +string + '\"' )
+    os.system(
+        'notify --type information --messageID 0 --group Orphilia --title \"Orphilia\" --icon B_ICON_PATH \"' + string + '\"')
+
 
 if type == "add":
-	haiku_notify("File " + sys.argv[2] + " has been added to your Dropbox.")
+    haiku_notify("File " + sys.argv[2] + " has been added to your Dropbox.")
 
 elif type == "rm":
-	haiku_notify("File " + sys.argv[2] + " has been removed from your Dropbox.")
+    haiku_notify("File " + sys.argv[2] + " has been removed from your Dropbox.")
 
 elif type == "upd":
-	haiku_notify("File " + sys.argv[2] + " has been updated.")
+    haiku_notify("File " + sys.argv[2] + " has been updated.")
 
 elif type == "link":
-	home = os.path.expanduser('~')
-	configurationdir = os.path.normpath(home + '/.orphilia/')
-	putin(message,configurationdir + '/Public link','rewrite')
-	os.system('/boot/system/apps/StyledEdit \"' +configurationdir + '/Public link\"')
+    home = os.path.expanduser('~')
+    configurationdir = os.path.normpath(home + '/.orphilia/')
+    putin(message, configurationdir + '/Public link', 'rewrite')
+    os.system('/boot/system/apps/StyledEdit \"' + configurationdir + '/Public link\"')

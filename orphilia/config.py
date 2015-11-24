@@ -1,62 +1,58 @@
 import sys, os, shutil
 from orphilia import common
+from ConfigParser import SafeConfigParser
 
 home = os.path.expanduser('~')
 
 # set configurationDirectory path dependent from platform
 configurationDirectory = common.getConfigurationDirectory()
 
+
 def config():
-	if os.path.isdir(configurationDirectory):
-		shutil.rmtree(configurationDirectory)
-	os.makedirs(configurationDirectory)
-	common.putIn('0',os.path.normpath(configurationDirectory+'/net-status'),'rewrite')
-	print("Welcome to Orphilia, an open-source crossplatform Dropbox client.\nIn few steps, you will configure your Dropbox account to be used with Orphilia.")
-	
-	if sys.platform[:5] == "haiku":
-		common.putIn('orphilia_haiku-notify',os.path.normpath(configurationDirectory+'/notify-settings'),'rewrite')
+    # remove old settings
+    if os.path.isdir(configurationDirectory):
+        shutil.rmtree(configurationDirectory)
 
-	else:
-		notifier = raw_input("Enter notify method: ")
-		common.putIn(notifier,os.path.normpath(configurationDirectory+'/notify-settings'),'rewrite')
+        # create directory
+    os.makedirs(configurationDirectory)
+    print(
+        "Welcome to Orphilia, an open-source crossplatform Dropbox client.\nIn few steps, you will configure your Dropbox account to be used with Orphilia.")
 
-	dropboxPath = raw_input("Dropbox folder location (optional):")
-	
-	if dropboxPath == "":	
-		dropboxPath = os.path.normpath(home + '/Dropbox')
-	else:
-		pass
-		
-	common.putIn(dropboxPath,os.path.normpath(configurationDirectory+'/dropbox-path'),'rewrite')
-	if not os.path.exists(dropboxPath):
- 		os.makedirs(dropboxPath)
+    # initialize config parser
+    config = SafeConfigParser()
+    config.read(configurationDirectory + '/config.ini')
 
-	print("Please wait. Orphilia is making configuration files.")
-	
-	import orphiliaclient
-	
-	tmp = [ 'uid', os.path.normpath(configurationDirectory+'/dropbox-id')]
-	orphiliaclient.client.client(tmp)
-	
-	print("Configuration files has been created.")
+    # make sure sections are there
+    config.add_section('main')
+    config.add_section('notifications')
 
-def config_gui(parameters):
-	if os.path.isdir(configurationDirectory):
-		shutil.rmtree(configurationDirectory)
-	os.makedirs(configurationDirectory)
-	common.putIn('0',os.path.normpath(configurationDirectory+'/net-status'),'rewrite')
-	
-	common.putIn('orphilia_haiku-notify',os.path.normpath(configurationDirectory+'/notify-settings'),'rewrite')
-	
-	dropboxPath = parameters[0]
-	
-	if dropboxPath == "default":	
-		dropboxPath = os.path.normpath(home + '/Dropbox')
-	else:
-		pass
-		
-	common.putIn(dropboxPath,os.path.normpath(configurationDirectory+'/dropbox-path'),'rewrite')
-	if not os.path.exists(dropboxPath):
- 		os.makedirs(dropboxPath)
+    # if we're on Haiku, we'd like to use that cool script which pushes notifications to desktop
+    if sys.platform[:5] == "haiku":
+        notifier = 'orphilia_haiku-notify'
+    else:
+        # nope, just ask the user
+        notifier = raw_input("Enter notify method: ")
+        config.set('notifications', 'notifier', notifier)
 
-	os.system('orphilia --client \"uid \''+os.path.normpath(configurationDirectory+'/dropbox-id') + '\'\"')
+    dropboxPath = raw_input("Dropbox folder location (optional):")
+
+    if dropboxPath == "":
+        dropboxPath = os.path.normpath(home + '/Dropbox')
+    else:
+        pass  # save dropbox path
+    config.set('main', 'path', dropboxPath)
+
+    # create directories if needed
+    if not os.path.exists(dropboxPath):
+        os.makedirs(dropboxPath)
+
+    import orphiliaclient
+
+    # create request for UID
+    uid = orphiliaclient.client.client(['uid'])
+    config.set('main', 'uid', uid)
+
+    with open(configurationDirectory + '/config.ini', 'w') as f:
+        config.write(f)
+
+    print("Configuration files has been created.")
