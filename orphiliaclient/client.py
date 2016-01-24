@@ -393,7 +393,7 @@ def client(parameters):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        file = open(to_path, "w+")
+        file = open(to_path, "wb")
         try:
             file.write(f.read())
             file.close()
