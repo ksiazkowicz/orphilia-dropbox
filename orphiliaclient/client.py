@@ -3,6 +3,8 @@ from shared import path_rewrite
 from orphilia import common
 import traceback
 from os.path import exists, normpath, join, dirname
+from dateutil.parser import parse, tz
+
 ####################### initialize Dropbox API #
 ################################################
 ###############################################
@@ -122,7 +124,7 @@ class Node(object):
 def apply_delta(root, e):
     queue = Queue.Queue(0)
     path, metadata = e
-    branch, leaf = split_path(path)
+    branch, leaf = split_path(path.encode("utf-8"))
 
     if metadata is not None:
         # Traverse down the tree until we find the parent folder of the entry
@@ -147,6 +149,7 @@ def apply_delta(root, e):
             if delta_switch == 0:
                 try:
                     os.makedirs(dropboxPath + "/" + metadata['path'])
+                    print(" > Directory created.")
                 except:
                     pass
         else:
@@ -307,7 +310,7 @@ def client(parameters):
                 print("Current entry: " + str(progress) + "/" + str(total))
                 apply_delta(tree, delta_entry)
                 cursor = result['cursor']
-                if not result['has_more']: break
+                #if not result['has_more']: break
 
         if not changed:
             sys.stdout.write('No updates.\n')
@@ -376,53 +379,84 @@ def client(parameters):
         to_path = parameters[2]
 
         resp = api_client.metadata(from_path)
-        modified = resp['modified']
+        modified = resp['client_mtime']
 
         try:
             open(os.path.expanduser(to_path), 'rb')
         except:
             pass
 
-        date1 = time.mktime(datetime.datetime.strptime(modified, "%a, %d %b %Y %H:%M:%S +0000").timetuple())
+        date1 = time.mktime(parse(modified).timetuple())
         f = api_client.get_file("/" + from_path)
+        dirname = os.path.dirname(os.path.abspath(to_path))
+
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         file = open(to_path, "w+")
         try:
             file.write(f.read())
+            file.close()
+            os.utime(os.path.normpath(to_path), (date1, date1))
         except:
             print(" x Unable to save file.")
-        file.close()
-        os.utime(os.path.normpath(to_path), (date1, date1))
 
     elif cmd == "sync":
+        """
+        Command which syncs files.
+            - if both file exists, compare the dates:
+                - local is older? download from server
+                - local is newer? remove from server and upload local
+            - if only local exists, upload
+            - if exists only on the server, download
+        """
+        # get path that was sent to client
         path = parameters[1]
         localPath = os.path.normpath(dropboxPath + '/' + path)
+        # assume that both files actually exist
         change = 'upd'
 
+        # check if file exists on the server, try to get response data
         try:
             resp = api_client.metadata(path)
             modified = resp['client_mtime']
+            dropboxTime = parse(modified)
         except:
+            # ok, it doesn't, so we're going to upload that file
+            dropboxTime = 0
             change = 'add'
 
+        # check if local file exists and try to get it's modified date
         try:
-            localTime = os.path.getmtime(localPath)
+            localTime = datetime.datetime.fromtimestamp(os.path.getmtime(localPath), tz=tz.tzutc())
         except:
+            change = 'get'
             localTime = 0
 
-        if (change != 'add'):
-            dropboxTime = time.mktime(datetime.datetime.strptime(modified, "%a, %d %b %Y %H:%M:%S +0000").timetuple())
-
-        if ((change != 'add') and (localTime < dropboxTime)):
-            tmp = ['get', path, localPath]
-            client(tmp)
-        elif ((change != 'add') and (localTime == dropboxTime)):
-            print(" > No need to update. localTime: " + str(localTime) + " = dropboxTime: " + str(dropboxTime))
+        # uhm, this was not supposed to happen...
+        if dropboxTime == 0 and localTime == 0:
+            print(" x WTF?! It looks like there is no file on the server nor locally...")
+            exit()
         else:
-            if (change != 'add'):
-                tmp = ['rm', path]
+            if change == "upd":
+                # both file exists, decide what's next
+                if localTime < dropboxTime:
+                    # local file is older, download from server
+                    change = "get"
+                else:
+                    # local file is newer, remove from server
+                    tmp = ['rm', path]
+                    client(tmp)
+                    # and reupload
+                    change = "add"
+
+            # push tasks to client
+            if change == "get":
+                tmp = ['get', path, localPath]
                 client(tmp)
-            tmp = ['put', localPath, path, change]
-            client(tmp)
+            elif change == "add":
+                tmp = ['put', localPath, path, change]
+                client(tmp)
 
     print(" > Command '" + parameters[0] + "' executed")
 
